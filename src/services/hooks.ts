@@ -5,6 +5,22 @@ import type { Area } from '../types/domain';
 import { listarOportunidadesDaEntidade, obterBancoDeHoras } from './horas';
 import { obterPainelAdmin, obterPainelEntidade, type Periodo } from './indicadores';
 import { listarOportunidadesAbertas } from './oportunidades';
+import {
+  listarCampanhas,
+  listarEntidadesPublicas,
+  listarEventos,
+  listarOportunidades,
+  listarParceiros,
+  listarProdutos,
+  obterCampanha,
+  obterEntidadePublica,
+  obterEvento,
+  obterOportunidade,
+  obterProduto,
+  obterProdutosPorId,
+  obterResumoPublico,
+  type FiltroOportunidades,
+} from './publico';
 import { listarBeneficiosDoParceiro, listarResgates } from './parceiros';
 import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
 
@@ -58,6 +74,26 @@ export const usePainelEntidade = (entidadeId: string, periodo: Periodo) =>
   });
 
 export const useEntidades = () => useQuery({ queryKey: ['entidades'], queryFn: listarEntidades });
+
+// ---------- Site público ----------
+export const useResumoPublico = () => useQuery({ queryKey: ['publico', 'resumo'], queryFn: obterResumoPublico });
+export const useOportunidades = (f: FiltroOportunidades) =>
+  useQuery({ queryKey: ['publico', 'oportunidades', f], queryFn: () => listarOportunidades(f), placeholderData: keepPreviousData });
+export const useOportunidade = (id: string) => useQuery({ queryKey: ['publico', 'oportunidade', id], queryFn: () => obterOportunidade(id) });
+export const useEventos = (entidadeId?: string) =>
+  useQuery({ queryKey: ['publico', 'eventos', entidadeId ?? 'todas'], queryFn: () => listarEventos({ entidadeId }) });
+export const useEvento = (slug: string) => useQuery({ queryKey: ['publico', 'evento', slug], queryFn: () => obterEvento(slug) });
+export const useCampanhas = (entidadeId?: string) =>
+  useQuery({ queryKey: ['publico', 'campanhas', entidadeId ?? 'todas'], queryFn: () => listarCampanhas({ entidadeId }) });
+export const useCampanha = (slug: string) => useQuery({ queryKey: ['publico', 'campanha', slug], queryFn: () => obterCampanha(slug) });
+export const useProdutos = (entidadeId?: string) =>
+  useQuery({ queryKey: ['publico', 'produtos', entidadeId ?? 'todas'], queryFn: () => listarProdutos({ entidadeId }), placeholderData: keepPreviousData });
+export const useProduto = (slug: string) => useQuery({ queryKey: ['publico', 'produto', slug], queryFn: () => obterProduto(slug) });
+export const useProdutosPorId = (ids: string[]) =>
+  useQuery({ queryKey: ['publico', 'produtos-id', [...ids].sort()], queryFn: () => obterProdutosPorId(ids), placeholderData: keepPreviousData });
+export const useEntidadesPublicas = () => useQuery({ queryKey: ['publico', 'entidades'], queryFn: listarEntidadesPublicas });
+export const useEntidadePublica = (slug: string) => useQuery({ queryKey: ['publico', 'entidade', slug], queryFn: () => obterEntidadePublica(slug) });
+export const useParceiros = () => useQuery({ queryKey: ['publico', 'parceiros'], queryFn: listarParceiros });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e

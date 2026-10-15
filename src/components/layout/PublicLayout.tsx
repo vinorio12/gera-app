@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, ShoppingCart, X } from 'lucide-react';
 import { GeraLogo, cx } from '@gera/design-system';
 import { PORTAL_HOME, useAuth } from '../../lib/auth';
+import { useCart } from '../../lib/cart';
 import { PUBLIC_NAV } from '../../lib/portals';
 import { BrandLogo } from '../shared/BrandLogo';
 import { IconButton } from '../shared/IconButton';
@@ -28,6 +29,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 /** Site público: cabeçalho com navegação e rodapé institucional. */
 export function PublicLayout() {
   const { session } = useAuth();
+  const { total: itensNoCarrinho } = useCart();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -53,7 +55,20 @@ export function PublicLayout() {
             </ul>
           </nav>
           <div className="ml-auto flex items-center gap-1">
-            <ThemeToggle />
+            {/* No celular a troca de tema fica dentro do menu, para o cabeçalho caber em 360px. */}
+            <ThemeToggle className="hidden sm:inline-flex" />
+            {itensNoCarrinho > 0 && (
+              <Link
+                to="/carrinho"
+                aria-label={`Carrinho, ${itensNoCarrinho} ${itensNoCarrinho === 1 ? 'item' : 'itens'}`}
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-md text-ink-muted hover:bg-bg-subtle hover:text-ink"
+              >
+                <ShoppingCart size={20} aria-hidden />
+                <span aria-hidden className="absolute right-1 top-1 min-w-5 rounded-pill bg-highlight px-1 text-center text-xs font-bold leading-5 text-on-highlight">
+                  {itensNoCarrinho}
+                </span>
+              </Link>
+            )}
             {session ? (
               <ButtonLink to={PORTAL_HOME[session.role]}>Meu portal</ButtonLink>
             ) : (
@@ -79,6 +94,10 @@ export function PublicLayout() {
                   </NavLink>
                 </li>
               ))}
+              <li className="flex items-center justify-between border-t border-border pt-2 sm:hidden">
+                <span className="px-3 text-sm font-semibold text-ink-muted">Tema</span>
+                <ThemeToggle />
+              </li>
             </ul>
           </nav>
         )}
