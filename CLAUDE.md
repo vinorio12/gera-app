@@ -17,8 +17,9 @@ App React 18 + TypeScript + Vite da plataforma GERA (Comitê Social ACIJS). O de
 - `src/components/layout`: `PublicLayout` (cabeçalho + rodapé), `DeskLayout` (Admin e Entidade, barra lateral recolhível) e `MobileLayout` (Voluntário e Parceiro, abas inferiores).
 - `src/components/shared`: peças do app que o pacote não tem (EmptyState, PageHeader, PageLoader, RequireRole...). `src/components/ui`: extensões finas do design system (ButtonLink usa as classes `gr-btn`).
 - `src/lib/auth.tsx`: sessão simulada ("entrar como") e perfis, incluindo a Bruna Costa (cadastro aguardando aprovação) para demonstrar a jornada; `src/lib/portals.ts`: itens de navegação de cada portal; `src/lib/theme.tsx`: tema claro/escuro via `data-theme`.
-- `src/types/domain.ts`: entidades do domínio. `src/mocks`: dados de exemplo determinísticos (`seed.ts`) e o "banco" em memória salvo no navegador (`db.ts`). Só `src/services` importa de `src/mocks`.
+- `src/types/domain.ts`: entidades do domínio. `src/mocks`: dados de exemplo determinísticos (`seed.ts`; ao mudar a forma dos dados, suba `DB_VERSION` para descartar o que está salvo nos navegadores) e o "banco" em memória salvo no navegador (`db.ts`). Só `src/services` importa de `src/mocks`.
 - `src/services`: funções assíncronas por domínio (amanhã chamam a API) e `hooks.ts` com os hooks do TanStack Query. As telas usam só os hooks. Toda mutação passa por `useGeraMutation`, que recarrega as consultas.
+- `src/services/indicadores.ts`: indicadores dos painéis por período (com comparação ao período anterior só quando há dados para comparar). Os gráficos usam Recharts com cores lidas dos tokens por `useTokenColors` (o Recharts escreve a cor direto no SVG); rótulos e valores sempre em texto, e todo gráfico tem "Ver como tabela".
 - `src/lib/carteirinha.ts`: regras puras da carteirinha (4 passos, status pela regra dos 6 meses, validade, elegibilidade e o QR temporário).
 - Telas ainda não construídas usam `ScreenPlaceholder` com o resumo do item de navegação. Ao construir uma, troque a rota provisória pela tela de verdade.
 

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 export type Theme = 'light' | 'dark';
 
@@ -26,23 +26,24 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(initialTheme);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
+  const [theme, setTheme] = useState<Theme>(() => {
+    const t = initialTheme();
+    // Aplicado já no primeiro render: quem lê as cores dos tokens (gráficos) vê o tema certo.
+    document.documentElement.dataset.theme = t;
+    return t;
+  });
 
   const toggleTheme = useCallback(() => {
-    setTheme((current) => {
-      const next = current === 'dark' ? 'light' : 'dark';
-      try {
-        localStorage.setItem(STORAGE_KEY, next);
-      } catch {
-        // sem storage: vale até recarregar
-      }
-      return next;
-    });
-  }, []);
+    const next = theme === 'dark' ? 'light' : 'dark';
+    // Antes do novo render, pelo mesmo motivo.
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // sem storage: vale até recarregar
+    }
+    setTheme(next);
+  }, [theme]);
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

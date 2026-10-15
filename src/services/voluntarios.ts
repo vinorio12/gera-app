@@ -81,6 +81,11 @@ export async function reativarVoluntario(id: string, entidadeId: string) {
   });
 }
 
+export async function listarEntidades(): Promise<Entidade[]> {
+  await delay();
+  return [...getDb().entidades].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+}
+
 // ---------- Visão do próprio voluntário ----------
 
 export interface MeuPainel {
