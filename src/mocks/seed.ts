@@ -18,7 +18,7 @@ import type {
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -361,6 +361,6 @@ export function createSeed(): MockDb {
 
   return {
     versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,
-    eventos: [...realizados, ...eventos], produtos, campanhas, entradas,
+    eventos: [...realizados, ...eventos], produtos, campanhas, entradas, pedidos: [], ingressosEmitidos: [],
   };
 }

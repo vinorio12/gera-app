@@ -6,16 +6,18 @@ import { PublicLayout } from '../components/layout/PublicLayout';
 import { NotFound } from '../components/shared/NotFound';
 import { PageLoader } from '../components/shared/PageLoader';
 import { RequireRole } from '../components/shared/RequireRole';
-import { ScreenPlaceholder } from '../components/shared/ScreenPlaceholder';
 import { ToastProvider } from '../components/shared/Toast';
 import { HomePage } from '../features/publico/HomePage';
 import { LoginPage } from '../features/publico/LoginPage';
+import { CadastroPage } from '../features/publico/CadastroPage';
+import { CheckoutPage } from '../features/publico/CheckoutPage';
+import { IngressosPage } from '../features/publico/IngressosPage';
+import { ValidarPage } from '../features/publico/ValidarPage';
 import { CampanhaDetalhePage, CampanhasPage } from '../features/publico/CampanhasPages';
 import { EntidadeDetalhePage, EntidadesPage, ParceirosPage } from '../features/publico/EntidadesParceirosPages';
 import { EventoDetalhePage, EventosPage } from '../features/publico/EventosPages';
 import { CarrinhoPage, LojaPage, ProdutoPage } from '../features/publico/LojaPages';
 import { OportunidadeDetalhePage, OportunidadesPage } from '../features/publico/OportunidadesPages';
-import { PUBLIC_PLACEHOLDERS } from '../features/publico/pages';
 import { AuthProvider, type Role } from '../lib/auth';
 import { CartProvider } from '../lib/cart';
 import { ThemeProvider } from '../lib/theme';
@@ -64,17 +66,11 @@ export function App() {
                       <Route path="entidades" element={<EntidadesPage />} />
                       <Route path="entidades/:slug" element={<EntidadeDetalhePage />} />
                       <Route path="parceiros" element={<ParceirosPage />} />
-                      {PUBLIC_PLACEHOLDERS.map(({ path, title, summary }) => (
-                        <Route
-                          key={path}
-                          path={path}
-                          element={
-                            <div className="mx-auto max-w-[1200px] px-4 py-10">
-                              <ScreenPlaceholder title={title} summary={summary} />
-                            </div>
-                          }
-                        />
-                      ))}
+                      <Route path="eventos/:slug/ingressos" element={<IngressosPage />} />
+                      <Route path="checkout" element={<CheckoutPage />} />
+                      <Route path="cadastro" element={<CadastroPage />} />
+                      <Route path="validar" element={<ValidarPage />} />
+                      <Route path="validar/:token" element={<ValidarPage />} />
                       <Route
                         path="*"
                         element={

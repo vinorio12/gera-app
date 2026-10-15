@@ -32,6 +32,14 @@ export interface Voluntario {
   desligamento: { em: string; motivo: string } | null;
   /** Número da carteirinha, ex.: JS-2026-004812. */
   registro: string;
+  /** Foto pequena (data URL) enviada no fim do cadastro. */
+  fotoUrl?: string;
+  endereco?: { cep: string; rua: string; numero: string; complemento: string; bairro: string; cidade: string; uf: string };
+  profissao?: string;
+  empresa?: string;
+  /** Ex.: "Sábado · Manhã". */
+  disponibilidade?: string[];
+  usaFormacao?: boolean;
 }
 
 /** Um registro no banco de horas: cada ação validada gera um. */
@@ -139,6 +147,43 @@ export interface Entrada {
   quantidade?: number;
 }
 
+export type MetodoPagamento = 'pix' | 'cartao' | 'boleto';
+
+/** Uma compra ou doação. O pagamento é confirmado pelo PaymentProvider. */
+export interface Pedido {
+  id: string;
+  tipo: 'loja' | 'ingressos' | 'doacao';
+  entidadeId: string;
+  descricao: string;
+  valor: number;
+  comprador: { nome: string; email: string };
+  /** Quando quem comprou é um voluntário logado: aparece em "Meus ingressos" / "Minhas doações". */
+  voluntarioId: string | null;
+  metodo: MetodoPagamento | 'gratuito';
+  status: 'aguardando' | 'pago' | 'recusado';
+  criadoEm: string;
+  cobrancaId: string | null;
+  /** Loja: itens e entrega. */
+  itens?: Array<{ produtoId: string; nome: string; variacao: string | null; quantidade: number; preco: number }>;
+  entrega?: 'retirada' | 'entrega';
+  /** Ingressos: evento e tipos comprados. */
+  eventoId?: string;
+  ingressos?: Array<{ tipo: string; quantidade: number; preco: number }>;
+  /** Doação: campanha (ou doação direta à entidade) e se é mensal. */
+  campanhaId?: string | null;
+  mensal?: boolean;
+}
+
+/** Ingresso emitido: um por participante, com QR próprio. */
+export interface IngressoEmitido {
+  id: string;
+  pedidoId: string;
+  eventoId: string;
+  tipo: string;
+  participante: string;
+  codigo: string;
+}
+
 /** Tudo o que o protótipo guarda; amanhã vem da API. */
 export interface MockDb {
   versao: number;
@@ -153,4 +198,6 @@ export interface MockDb {
   produtos: Produto[];
   campanhas: Campanha[];
   entradas: Entrada[];
+  pedidos: Pedido[];
+  ingressosEmitidos: IngressoEmitido[];
 }

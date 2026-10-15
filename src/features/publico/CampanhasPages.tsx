@@ -150,7 +150,7 @@ export function CampanhaDetalhePage() {
                     >
                       {valido ? `Doar ${formatBRL(escolhido!)}${mensal ? ' por mês' : ''}` : 'Escolha um valor'}
                     </ButtonLink>
-                    <p className="text-xs text-ink-muted">Pix, cartão ou boleto. O pagamento entra na próxima etapa do protótipo.</p>
+                    <p className="text-xs text-ink-muted">Pix, cartão ou boleto. A doação mensal é feita no cartão.</p>
                   </section>
                 </div>
               </div>

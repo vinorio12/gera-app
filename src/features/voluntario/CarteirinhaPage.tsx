@@ -61,6 +61,7 @@ export function CarteirinhaPage() {
             <Carteirinha
               className="w-full max-w-[340px]"
               name={v.nome}
+              photoUrl={v.fotoUrl}
               organizations={entidades.map((e) => e.nome)}
               registration={v.registro}
               hours={c.totalHoras}

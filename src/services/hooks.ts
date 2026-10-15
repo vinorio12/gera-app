@@ -22,6 +22,7 @@ import {
   type FiltroOportunidades,
 } from './publico';
 import { listarBeneficiosDoParceiro, listarResgates } from './parceiros';
+import { acompanharPedido, listarMeusIngressos, listarMinhasDoacoes } from './pedidos';
 import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
 
 export const queryClient = new QueryClient({
@@ -94,6 +95,23 @@ export const useProdutosPorId = (ids: string[]) =>
 export const useEntidadesPublicas = () => useQuery({ queryKey: ['publico', 'entidades'], queryFn: listarEntidadesPublicas });
 export const useEntidadePublica = (slug: string) => useQuery({ queryKey: ['publico', 'entidade', slug], queryFn: () => obterEntidadePublica(slug) });
 export const useParceiros = () => useQuery({ queryKey: ['publico', 'parceiros'], queryFn: listarParceiros });
+
+// ---------- Pedidos ----------
+/** Dados do voluntário logado para preencher o checkout (só quando há um). */
+export const usePerfilComprador = (voluntarioId?: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'painel'], queryFn: () => obterMeuPainel(voluntarioId!), enabled: !!voluntarioId });
+/** Acompanha o pagamento: consulta a cada segundo enquanto o pedido aguarda. */
+export const useAndamentoPedido = (pedidoId: string | null) =>
+  useQuery({
+    queryKey: ['pedido', pedidoId],
+    queryFn: () => acompanharPedido(pedidoId!),
+    enabled: !!pedidoId,
+    refetchInterval: (q) => (q.state.data?.pedido.status === 'aguardando' ? 1000 : false),
+  });
+export const useMeusIngressos = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'ingressos'], queryFn: () => listarMeusIngressos(voluntarioId) });
+export const useMinhasDoacoes = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'doacoes'], queryFn: () => listarMinhasDoacoes(voluntarioId) });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e
