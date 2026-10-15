@@ -1,0 +1,111 @@
+/* GERA componentes. Requer tokens.css. */
+
+/* GERA, componentes base. Classes com prefixo gr-. Todas as cores vêm de tokens.css. */
+body { margin: 0; font-family: var(--font-body); color: var(--ink); background: var(--bg-page); -webkit-font-smoothing: antialiased; }
+.gr-display { font-family: var(--font-display); font-weight: 400; letter-spacing: .01em; }
+
+/* ---------- Grafismo: cremalheira (dentes de engrenagem) ---------- */
+.gr-rack { height: calc(var(--tooth-height) + 2px); background:
+  linear-gradient(var(--border-strong), var(--border-strong)) bottom / 100% 2px no-repeat,
+  repeating-linear-gradient(90deg, var(--border-strong) 0 var(--tooth-width), transparent var(--tooth-width) calc(var(--tooth-width) + var(--tooth-gap))) top / 100% var(--tooth-height) no-repeat; }
+.gr-gear-mark { background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M28.37%209.09L28.80%202.17L35.20%202.17L35.63%209.09A23.2%2023.2%200%200%201%2042.53%2011.33L46.95%205.99L52.12%209.75L48.40%2015.60A23.2%2023.2%200%200%201%2052.67%2021.47L59.38%2019.74L61.36%2025.82L54.91%2028.37A23.2%2023.2%200%200%201%2054.91%2035.63L61.36%2038.18L59.38%2044.26L52.67%2042.53A23.2%2023.2%200%200%201%2048.40%2048.40L52.12%2054.25L46.95%2058.01L42.53%2052.67A23.2%2023.2%200%200%201%2035.63%2054.91L35.20%2061.83L28.80%2061.83L28.37%2054.91A23.2%2023.2%200%200%201%2021.47%2052.67L17.05%2058.01L11.88%2054.25L15.60%2048.40A23.2%2023.2%200%200%201%2011.33%2042.53L4.62%2044.26L2.64%2038.18L9.09%2035.63A23.2%2023.2%200%200%201%209.09%2028.37L2.64%2025.82L4.62%2019.74L11.33%2021.47A23.2%2023.2%200%200%201%2015.60%2015.60L11.88%209.75L17.05%205.99L21.47%2011.33A23.2%2023.2%200%200%201%2028.37%209.09ZM47.4%2032A15.4%2015.4%200%201%200%2016.6%2032A15.4%2015.4%200%201%200%2047.4%2032Z%22%20fill%3D%22%2395B32F%22%20fill-opacity%3D%221%22%20fill-rule%3D%22evenodd%22/%3E%3C/svg%3E") center / contain no-repeat; }
+
+/* ---------- Button ---------- */
+.gr-btn { font: 600 15px/20px var(--font-body); display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 12px 20px; border-radius: var(--radius-md); border: 1.5px solid transparent; cursor: pointer; text-decoration: none; transition: background .15s ease, border-color .15s ease; }
+.gr-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.gr-btn--primary { background: var(--primary); color: var(--on-primary); }
+.gr-btn--primary:hover { background: var(--primary-hover); }
+.gr-btn--highlight { background: var(--highlight); color: var(--on-highlight); }
+.gr-btn--highlight:hover { background: var(--highlight-hover); }
+.gr-btn--secondary { background: var(--bg-card); color: var(--link); border-color: var(--border-strong); }
+.gr-btn--secondary:hover { border-color: var(--primary); }
+.gr-btn--ghost { background: transparent; color: var(--link); }
+.gr-btn--ghost:hover { background: var(--primary-soft); }
+.gr-btn--danger { background: var(--bg-card); color: var(--on-accent-soft); border-color: var(--accent); }
+.gr-btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* ---------- Status badge ---------- */
+.gr-badge { font: 700 12px/16px var(--font-body); letter-spacing: .06em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radius-sm); }
+.gr-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.gr-badge--novo { background: var(--info-soft); color: var(--on-info-soft); }
+.gr-badge--ativo { background: var(--primary-soft); color: var(--on-primary-soft); }
+.gr-badge--inativo { background: var(--bg-subtle); color: var(--ink-muted); box-shadow: inset 0 0 0 1px var(--border); }
+.gr-badge--inativo::before { background: transparent; border: 1.5px solid currentColor; width: 6px; height: 6px; }
+.gr-badge--desligado { background: var(--accent-soft); color: var(--on-accent-soft); }
+.gr-badge--desligado::before { border-radius: 1px; }
+
+/* ---------- Portal header (verbo) ---------- */
+.gr-portal { background: var(--brand-deep); color: var(--on-brand-deep); border-radius: var(--radius-lg); padding: 16px 20px 18px; min-width: 210px; flex: 1; position: relative; overflow: hidden; }
+.gr-portal::after { content: ""; position: absolute; right: -26px; top: -26px; width: 96px; height: 96px; opacity: .22; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M28.37%209.09L28.80%202.17L35.20%202.17L35.63%209.09A23.2%2023.2%200%200%201%2042.53%2011.33L46.95%205.99L52.12%209.75L48.40%2015.60A23.2%2023.2%200%200%201%2052.67%2021.47L59.38%2019.74L61.36%2025.82L54.91%2028.37A23.2%2023.2%200%200%201%2054.91%2035.63L61.36%2038.18L59.38%2044.26L52.67%2042.53A23.2%2023.2%200%200%201%2048.40%2048.40L52.12%2054.25L46.95%2058.01L42.53%2052.67A23.2%2023.2%200%200%201%2035.63%2054.91L35.20%2061.83L28.80%2061.83L28.37%2054.91A23.2%2023.2%200%200%201%2021.47%2052.67L17.05%2058.01L11.88%2054.25L15.60%2048.40A23.2%2023.2%200%200%201%2011.33%2042.53L4.62%2044.26L2.64%2038.18L9.09%2035.63A23.2%2023.2%200%200%201%209.09%2028.37L2.64%2025.82L4.62%2019.74L11.33%2021.47A23.2%2023.2%200%200%201%2015.60%2015.60L11.88%209.75L17.05%205.99L21.47%2011.33A23.2%2023.2%200%200%201%2028.37%209.09ZM47.4%2032A15.4%2015.4%200%201%200%2016.6%2032A15.4%2015.4%200%201%200%2047.4%2032Z%22%20fill%3D%22%2395B32F%22%20fill-opacity%3D%221%22%20fill-rule%3D%22evenodd%22/%3E%3C/svg%3E") center / contain no-repeat; }
+.gr-portal__verb { font: 400 34px/34px var(--font-display); letter-spacing: .02em; }
+.gr-portal__who { font: 600 13px/18px var(--font-body); opacity: .85; margin-top: 4px; }
+.gr-portal__bar { height: 5px; width: 48px; border-radius: 2px; margin-bottom: 12px; }
+.gr-portal--engajar .gr-portal__bar { background: var(--portal-engajar); }
+.gr-portal--impulsionar .gr-portal__bar { background: var(--portal-impulsionar); }
+.gr-portal--conectar .gr-portal__bar { background: var(--portal-conectar); }
+.gr-portal--ampliar .gr-portal__bar { background: #FFFFFF; }
+
+/* ---------- KPI card ---------- */
+.gr-kpi { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 20px 22px; min-width: 200px; flex: 1; }
+.gr-kpi__label { font: 600 14px/20px var(--font-body); color: var(--ink-muted); }
+.gr-kpi__value { font: 400 48px/48px var(--font-display); font-variant-numeric: tabular-nums; margin: 10px 0 4px; color: var(--ink); }
+.gr-kpi__delta { font: 600 13px/18px var(--font-body); color: var(--on-primary-soft); }
+.gr-kpi__delta--down { color: var(--on-accent-soft); }
+.gr-kpi .gr-rack { margin: 14px 0 8px; }
+.gr-kpi__source { font: 400 12px/16px var(--font-body); color: var(--ink-muted); }
+
+/* ---------- Campaign progress (cremalheira + engrenagem) ---------- */
+.gr-campaign { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 22px; width: 100%; max-width: 420px; box-sizing: border-box; }
+.gr-campaign__title { font: 700 18px/26px var(--font-body); margin: 0 0 2px; }
+.gr-campaign__org { font: 400 14px/20px var(--font-body); color: var(--ink-muted); margin: 0 0 22px; }
+.gr-progress { position: relative; height: 12px; border-radius: 3px; background: var(--bg-subtle); box-shadow: inset 0 0 0 1px var(--border); }
+.gr-progress__fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--primary); }
+.gr-progress__fill::before { content: ""; position: absolute; left: 0; right: 14px; top: calc(-1 * var(--tooth-height)); height: var(--tooth-height);
+  background: repeating-linear-gradient(90deg, var(--primary) 0 var(--tooth-width), transparent var(--tooth-width) calc(var(--tooth-width) + var(--tooth-gap))); }
+.gr-progress__gear { position: absolute; right: -15px; top: 50%; width: 30px; height: 30px; transform: translateY(-50%);  }
+.gr-progress__gear-inner { display: block; width: 100%; height: 100%; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M28.37%209.09L28.80%202.17L35.20%202.17L35.63%209.09A23.2%2023.2%200%200%201%2042.53%2011.33L46.95%205.99L52.12%209.75L48.40%2015.60A23.2%2023.2%200%200%201%2052.67%2021.47L59.38%2019.74L61.36%2025.82L54.91%2028.37A23.2%2023.2%200%200%201%2054.91%2035.63L61.36%2038.18L59.38%2044.26L52.67%2042.53A23.2%2023.2%200%200%201%2048.40%2048.40L52.12%2054.25L46.95%2058.01L42.53%2052.67A23.2%2023.2%200%200%201%2035.63%2054.91L35.20%2061.83L28.80%2061.83L28.37%2054.91A23.2%2023.2%200%200%201%2021.47%2052.67L17.05%2058.01L11.88%2054.25L15.60%2048.40A23.2%2023.2%200%200%201%2011.33%2042.53L4.62%2044.26L2.64%2038.18L9.09%2035.63A23.2%2023.2%200%200%201%209.09%2028.37L2.64%2025.82L4.62%2019.74L11.33%2021.47A23.2%2023.2%200%200%201%2015.60%2015.60L11.88%209.75L17.05%205.99L21.47%2011.33A23.2%2023.2%200%200%201%2028.37%209.09ZM47.4%2032A15.4%2015.4%200%201%200%2016.6%2032A15.4%2015.4%200%201%200%2047.4%2032Z%22%20fill%3D%22%23F2CB05%22%20fill-opacity%3D%221%22%20fill-rule%3D%22evenodd%22/%3E%3C/svg%3E") center / contain no-repeat; }
+.gr-campaign__nums { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; font-variant-numeric: tabular-nums; }
+.gr-campaign__raised { font: 400 34px/34px var(--font-display); }
+.gr-campaign__goal { font: 400 14px/20px var(--font-body); color: var(--ink-muted); }
+.gr-campaign__pct { font: 700 14px/20px var(--font-body); color: var(--on-primary-soft); background: var(--primary-soft); border-radius: var(--radius-sm); padding: 2px 8px; }
+.gr-campaign .gr-btn { width: 100%; justify-content: center; margin-top: 18px; }
+
+/* ---------- Carteirinha digital ---------- */
+.gr-card-id { width: 340px; aspect-ratio: 85.6 / 54; border-radius: var(--radius-xl); background: var(--brand-deep); color: var(--on-brand-deep); box-shadow: var(--shadow-raised); padding: 18px 20px; box-sizing: border-box; position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; gap: 8px 14px; }
+.gr-card-id::before { content: ""; position: absolute; left: -54px; bottom: -64px; width: 190px; height: 190px; opacity: .16; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M28.37%209.09L28.80%202.17L35.20%202.17L35.63%209.09A23.2%2023.2%200%200%201%2042.53%2011.33L46.95%205.99L52.12%209.75L48.40%2015.60A23.2%2023.2%200%200%201%2052.67%2021.47L59.38%2019.74L61.36%2025.82L54.91%2028.37A23.2%2023.2%200%200%201%2054.91%2035.63L61.36%2038.18L59.38%2044.26L52.67%2042.53A23.2%2023.2%200%200%201%2048.40%2048.40L52.12%2054.25L46.95%2058.01L42.53%2052.67A23.2%2023.2%200%200%201%2035.63%2054.91L35.20%2061.83L28.80%2061.83L28.37%2054.91A23.2%2023.2%200%200%201%2021.47%2052.67L17.05%2058.01L11.88%2054.25L15.60%2048.40A23.2%2023.2%200%200%201%2011.33%2042.53L4.62%2044.26L2.64%2038.18L9.09%2035.63A23.2%2023.2%200%200%201%209.09%2028.37L2.64%2025.82L4.62%2019.74L11.33%2021.47A23.2%2023.2%200%200%201%2015.60%2015.60L11.88%209.75L17.05%205.99L21.47%2011.33A23.2%2023.2%200%200%201%2028.37%209.09ZM47.4%2032A15.4%2015.4%200%201%200%2016.6%2032A15.4%2015.4%200%201%200%2047.4%2032Z%22%20fill%3D%22%2395B32F%22%20fill-opacity%3D%221%22%20fill-rule%3D%22evenodd%22/%3E%3C/svg%3E") center / contain no-repeat; }
+.gr-card-id > * { position: relative; }
+.gr-card-id__brand svg { height: 30px; width: auto; display: block; }
+.gr-card-id__status { justify-self: end; align-self: start; font: 400 16px/1 var(--font-display); letter-spacing: .06em; background: var(--highlight); color: var(--on-highlight); padding: 6px 10px 5px; border-radius: var(--radius-sm); }
+.gr-card-id__person { display: flex; gap: 12px; align-items: center; align-self: center; }
+.gr-card-id__photo { width: 54px; height: 54px; border-radius: 12px; background: #95B32F; display: grid; place-items: center; font: 400 26px/1 var(--font-display); color: #232324; flex: none; }
+.gr-card-id__name { font: 400 26px/26px var(--font-display); letter-spacing: .02em; }
+.gr-card-id__orgs { font: 400 12px/16px var(--font-body); opacity: .85; }
+.gr-card-id__qr { grid-row: 2 / 4; grid-column: 2; align-self: end; width: 84px; height: 84px; background: #fff; border-radius: 8px; padding: 6px; box-sizing: border-box; }
+.gr-card-id__meta { font: 600 11px/15px var(--font-body); letter-spacing: .03em; opacity: .88; font-variant-numeric: tabular-nums; }
+
+/* ---------- Validação do parceiro ---------- */
+.gr-validate { background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-raised); width: 320px; overflow: hidden; border: 1px solid var(--border); }
+.gr-validate__head { background: var(--primary); color: var(--on-primary); padding: 16px 20px; display: flex; gap: 12px; align-items: center; font: 400 28px/30px var(--font-display); letter-spacing: .02em; }
+.gr-validate__head--no { background: var(--accent); }
+.gr-validate__icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; font: 700 18px/1 var(--font-body); }
+.gr-validate dl { margin: 0; padding: 16px 20px 20px; display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; }
+.gr-validate dt { font: 400 14px/20px var(--font-body); color: var(--ink-muted); }
+.gr-validate dd { margin: 0; font: 600 14px/20px var(--font-body); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- Event card ---------- */
+.gr-event { width: 300px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-card); overflow: hidden; }
+.gr-event__banner { height: 128px; background: var(--brand-deep); position: relative; }
+.gr-event__banner::before { content: ""; position: absolute; right: -40px; top: -50px; width: 170px; height: 170px; opacity: .35; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M28.37%209.09L28.80%202.17L35.20%202.17L35.63%209.09A23.2%2023.2%200%200%201%2042.53%2011.33L46.95%205.99L52.12%209.75L48.40%2015.60A23.2%2023.2%200%200%201%2052.67%2021.47L59.38%2019.74L61.36%2025.82L54.91%2028.37A23.2%2023.2%200%200%201%2054.91%2035.63L61.36%2038.18L59.38%2044.26L52.67%2042.53A23.2%2023.2%200%200%201%2048.40%2048.40L52.12%2054.25L46.95%2058.01L42.53%2052.67A23.2%2023.2%200%200%201%2035.63%2054.91L35.20%2061.83L28.80%2061.83L28.37%2054.91A23.2%2023.2%200%200%201%2021.47%2052.67L17.05%2058.01L11.88%2054.25L15.60%2048.40A23.2%2023.2%200%200%201%2011.33%2042.53L4.62%2044.26L2.64%2038.18L9.09%2035.63A23.2%2023.2%200%200%201%209.09%2028.37L2.64%2025.82L4.62%2019.74L11.33%2021.47A23.2%2023.2%200%200%201%2015.60%2015.60L11.88%209.75L17.05%205.99L21.47%2011.33A23.2%2023.2%200%200%201%2028.37%209.09ZM47.4%2032A15.4%2015.4%200%201%200%2016.6%2032A15.4%2015.4%200%201%200%2047.4%2032Z%22%20fill%3D%22%2395B32F%22%20fill-opacity%3D%221%22%20fill-rule%3D%22evenodd%22/%3E%3C/svg%3E") center / contain no-repeat; }
+.gr-event__banner::after { content: ""; position: absolute; right: 92px; top: 52px; width: 70px; height: 70px; opacity: .55; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M28.37%209.09L28.80%202.17L35.20%202.17L35.63%209.09A23.2%2023.2%200%200%201%2042.53%2011.33L46.95%205.99L52.12%209.75L48.40%2015.60A23.2%2023.2%200%200%201%2052.67%2021.47L59.38%2019.74L61.36%2025.82L54.91%2028.37A23.2%2023.2%200%200%201%2054.91%2035.63L61.36%2038.18L59.38%2044.26L52.67%2042.53A23.2%2023.2%200%200%201%2048.40%2048.40L52.12%2054.25L46.95%2058.01L42.53%2052.67A23.2%2023.2%200%200%201%2035.63%2054.91L35.20%2061.83L28.80%2061.83L28.37%2054.91A23.2%2023.2%200%200%201%2021.47%2052.67L17.05%2058.01L11.88%2054.25L15.60%2048.40A23.2%2023.2%200%200%201%2011.33%2042.53L4.62%2044.26L2.64%2038.18L9.09%2035.63A23.2%2023.2%200%200%201%209.09%2028.37L2.64%2025.82L4.62%2019.74L11.33%2021.47A23.2%2023.2%200%200%201%2015.60%2015.60L11.88%209.75L17.05%205.99L21.47%2011.33A23.2%2023.2%200%200%201%2028.37%209.09ZM47.4%2032A15.4%2015.4%200%201%200%2016.6%2032A15.4%2015.4%200%201%200%2047.4%2032Z%22%20fill%3D%22%23F2CB05%22%20fill-opacity%3D%221%22%20fill-rule%3D%22evenodd%22/%3E%3C/svg%3E") center / contain no-repeat; }
+.gr-event__date { position: absolute; left: 14px; bottom: -22px; width: 56px; background: var(--bg-card); border-radius: 10px; box-shadow: var(--shadow-card); text-align: center; padding: 6px 0 4px; z-index: 1; }
+.gr-event__day { font: 400 30px/28px var(--font-display); color: var(--ink); }
+.gr-event__mon { font: 400 15px/16px var(--font-display); letter-spacing: .08em; color: var(--accent); }
+.gr-event__body { padding: 30px 16px 16px; }
+.gr-event__title { font: 700 17px/24px var(--font-body); margin: 0 0 6px; }
+.gr-event__meta { font: 400 14px/20px var(--font-body); color: var(--ink-muted); margin: 0 0 14px; }
+.gr-event__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.gr-event__price { font: 700 14px/18px var(--font-body); font-variant-numeric: tabular-nums; }
+.gr-event .gr-btn { min-height: 40px; padding: 9px 12px; font-size: 14px; white-space: nowrap; flex: none; }
+
+@media (prefers-reduced-motion: no-preference) { .gr-spin { animation: gr-spin 2.4s linear infinite; } }
+@keyframes gr-spin { to { transform: rotate(360deg); } }

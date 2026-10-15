@@ -1,0 +1,162 @@
+/* GERA design tokens. Gerado a partir de tokens.json, não edite à mão. */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@400;600;700&display=swap');
+
+:root, [data-theme="light"] {
+  --verde-950: #06341A;
+  --verde-900: #0C582C;
+  --verde-800: #054C24;
+  --verde-700: #006B2B;
+  --verde-600: #008434;
+  --verde-500: #03A63C;
+  --verde-100: #DDF3E4;
+  --verde-50: #EEFFF3;
+  --limao-800: #4F6115;
+  --limao-500: #95B32F;
+  --limao-300: #B6D35A;
+  --limao-100: #EEF4D9;
+  --ouro-700: #8F6002;
+  --ouro-600: #D9A400;
+  --ouro-500: #F2CB05;
+  --ouro-100: #FDF5CC;
+  --vermelho-700: #A3201F;
+  --vermelho-600: #C8282B;
+  --vermelho-400: #FF6B5E;
+  --vermelho-100: #FBE3E1;
+  --itapocu-700: #0B5770;
+  --itapocu-600: #0E6E8C;
+  --itapocu-100: #DCEFF5;
+  --tinta: #232324;
+  --grafite: #505050;
+  --cinza-400: #8A8A8A;
+  --borda-base: #E5E7EB;
+  --nevoa: #F3F4F6;
+  --papel: #FFFFFF;
+  --bg-page: var(--nevoa);
+  --bg-card: var(--papel);
+  --bg-subtle: #F9FAFB;
+  --ink: var(--tinta);
+  --ink-muted: var(--grafite);
+  --border: var(--borda-base);
+  --border-strong: #BDBDBD;
+  --primary: var(--verde-600);
+  --primary-hover: var(--verde-700);
+  --on-primary: var(--papel);
+  --primary-soft: var(--verde-100);
+  --on-primary-soft: var(--verde-700);
+  --link: var(--verde-700);
+  --secondary: var(--limao-500);
+  --on-secondary: var(--tinta);
+  --secondary-soft: var(--limao-100);
+  --on-secondary-soft: var(--limao-800);
+  --highlight: var(--ouro-500);
+  --highlight-hover: var(--ouro-600);
+  --on-highlight: var(--tinta);
+  --highlight-soft: var(--ouro-100);
+  --on-highlight-soft: var(--ouro-700);
+  --accent: var(--vermelho-600);
+  --accent-soft: var(--vermelho-100);
+  --on-accent-soft: var(--vermelho-700);
+  --info: var(--itapocu-600);
+  --info-soft: var(--itapocu-100);
+  --on-info-soft: var(--itapocu-700);
+  --brand-deep: var(--verde-900);
+  --on-brand-deep: var(--papel);
+  --focus-ring: var(--ouro-500);
+  --portal-engajar: var(--verde-600);
+  --portal-impulsionar: var(--ouro-500);
+  --portal-conectar: var(--limao-500);
+  --portal-ampliar: var(--verde-900);
+  --shadow-card: 0 1px 2px rgba(12,88,44,0.06), 0 4px 16px rgba(12,88,44,0.06);
+  --shadow-raised: 0 8px 32px rgba(12,88,44,0.16);
+}
+
+[data-theme="dark"] {
+  --bg-page: #111412;
+  --bg-card: #1A1E1B;
+  --bg-subtle: #222724;
+  --ink: #ECEDEB;
+  --ink-muted: #A9AEAA;
+  --border: #2E3430;
+  --border-strong: #4A514C;
+  --primary: #5CC77E;
+  --primary-hover: #7FD49A;
+  --on-primary: #0B1F12;
+  --primary-soft: #12301E;
+  --on-primary-soft: #7FD49A;
+  --link: #7FD49A;
+  --secondary: var(--limao-300);
+  --secondary-soft: #26300E;
+  --on-secondary-soft: var(--limao-300);
+  --highlight-hover: #FFD84D;
+  --highlight-soft: #33290A;
+  --on-highlight-soft: #F5D75A;
+  --accent: var(--vermelho-400);
+  --accent-soft: #3A1715;
+  --on-accent-soft: var(--vermelho-400);
+  --info: #6CC3DE;
+  --info-soft: #0F2E38;
+  --on-info-soft: #8FD3E8;
+  --brand-deep: #0E3F22;
+  --portal-engajar: #5CC77E;
+  --portal-conectar: var(--limao-300);
+  --portal-ampliar: #7FD49A;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-raised: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: #111412;
+    --bg-card: #1A1E1B;
+    --bg-subtle: #222724;
+    --ink: #ECEDEB;
+    --ink-muted: #A9AEAA;
+    --border: #2E3430;
+    --border-strong: #4A514C;
+    --primary: #5CC77E;
+    --primary-hover: #7FD49A;
+    --on-primary: #0B1F12;
+    --primary-soft: #12301E;
+    --on-primary-soft: #7FD49A;
+    --link: #7FD49A;
+    --secondary: var(--limao-300);
+    --secondary-soft: #26300E;
+    --on-secondary-soft: var(--limao-300);
+    --highlight-hover: #FFD84D;
+    --highlight-soft: #33290A;
+    --on-highlight-soft: #F5D75A;
+    --accent: var(--vermelho-400);
+    --accent-soft: #3A1715;
+    --on-accent-soft: var(--vermelho-400);
+    --info: #6CC3DE;
+    --info-soft: #0F2E38;
+    --on-info-soft: #8FD3E8;
+    --brand-deep: #0E3F22;
+    --portal-engajar: #5CC77E;
+    --portal-conectar: var(--limao-300);
+    --portal-ampliar: #7FD49A;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-raised: 0 8px 32px rgba(0,0,0,0.5);
+  }
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --tooth-width: 8px;
+  --tooth-gap: 6px;
+  --tooth-height: 5px;
+  --font-display: "Bebas Neue", "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Open Sans", "Segoe UI", system-ui, sans-serif;
+}
