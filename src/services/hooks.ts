@@ -1,11 +1,12 @@
 // Hooks do TanStack Query sobre a camada de serviços: é o que as telas usam.
-import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { resetDb } from '../mocks/db';
 import type { Area } from '../types/domain';
 import { listarOportunidadesDaEntidade, obterBancoDeHoras } from './horas';
+import { obterPainelAdmin, obterPainelEntidade, type Periodo } from './indicadores';
 import { listarOportunidadesAbertas } from './oportunidades';
 import { listarBeneficiosDoParceiro, listarResgates } from './parceiros';
-import { listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
+import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,23 @@ export const useBeneficiosDoParceiro = (parceiroId: string) =>
 
 export const useResgates = (parceiroId: string) =>
   useQuery({ queryKey: ['parceiro', parceiroId, 'resgates'], queryFn: () => listarResgates(parceiroId) });
+
+export const usePainelAdmin = (periodo: Periodo, entidadeId?: string) =>
+  useQuery({
+    queryKey: ['admin', 'painel', periodo, entidadeId ?? 'todas'],
+    queryFn: () => obterPainelAdmin({ periodo, entidadeId }),
+    // Ao trocar o filtro, mantém os números anteriores na tela até chegarem os novos.
+    placeholderData: keepPreviousData,
+  });
+
+export const usePainelEntidade = (entidadeId: string, periodo: Periodo) =>
+  useQuery({
+    queryKey: ['entidade', entidadeId, 'painel', periodo],
+    queryFn: () => obterPainelEntidade({ entidadeId, periodo }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useEntidades = () => useQuery({ queryKey: ['entidades'], queryFn: listarEntidades });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e

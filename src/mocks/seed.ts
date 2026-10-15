@@ -7,6 +7,7 @@ import type {
   Beneficio,
   Campanha,
   Entidade,
+  Entrada,
   Evento,
   MockDb,
   Oportunidade,
@@ -17,7 +18,7 @@ import type {
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 1;
+export const DB_VERSION = 3;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -81,7 +82,15 @@ export function createSeed(): MockDb {
   const rand = mulberry32(2026);
   const int = (min: number, max: number) => min + Math.floor(rand() * (max - min + 1));
   const pick = <T,>(list: readonly T[]): T => list[Math.floor(rand() * list.length)]!;
-  const sample = <T,>(list: readonly T[], n: number): T[] => [...list].sort(() => rand() - 0.5).slice(0, n);
+  // Fisher-Yates com a semente: sort() com comparação aleatória muda de um motor JS para outro.
+  const sample = <T,>(list: readonly T[], n: number): T[] => {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [copy[i], copy[j]] = [copy[j]!, copy[i]!];
+    }
+    return copy.slice(0, n);
+  };
   const cpf = () => cpfFromBase(Array.from({ length: 9 }, () => int(0, 9)));
   const telefone = () => `(47) 9${int(8000, 9999)}-${String(int(0, 9999)).padStart(4, '0')}`;
   const email = (nome: string) =>
@@ -154,7 +163,10 @@ export function createSeed(): MockDb {
 
   // ---------- Banco de horas: 40 registros por mês nos últimos 12 meses ----------
   const horas: RegistroHoras[] = ALEX_HORAS.map(([data, projeto, h], i) => ({
-    id: `h-alex-${i}`, voluntarioId: 'v-alex', entidadeId: 'ama-jaragua', oportunidadeId: null, data, projeto, horas: h, origem: 'qr',
+    id: `h-alex-${i}`, voluntarioId: 'v-alex', entidadeId: 'ama-jaragua',
+    // O check-in de hoje do Alex já foi feito na ação do Evento Beneficente.
+    oportunidadeId: data === iso(SEED_TODAY) ? 'o-evento-beneficente' : null,
+    data, projeto, horas: h, origem: 'qr',
   }));
   let seq = 0;
   const registrar = (v: Voluntario, data: string) => {
@@ -279,5 +291,76 @@ export function createSeed(): MockDb {
     { id: 'c-3', slug: 'mudas', entidadeId: 'instituto-itapocu', titulo: 'Mil mudas para o Itapocu', historia: 'Mudas nativas para recuperar 2 km de margem.', meta: 8000, arrecadado: 6100, apoiadores: 122, terminaEm: iso(addMonths(SEED_TODAY, 2)) },
   ];
 
-  return { versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates, eventos, produtos, campanhas };
+  // ---------- Eventos já realizados nos últimos 12 meses ----------
+  const realizados: Evento[] = (
+    [
+      ['Bingo Beneficente do Recanto', 'casa-recanto', 11, 20, 140],
+      ['Mutirão de Natal', 'banco-alimentos', 10, 0, 150],
+      ['Festival de Verão Bola na Rede', 'bola-na-rede', 9, 15, 220],
+      ['Oficina aberta de crochê', 'maos-que-tecem', 8, 0, 60],
+      ['Almoço de Páscoa da AMA', 'ama-jaragua', 6, 45, 160],
+      ['Plantio coletivo no Itapocu', 'instituto-itapocu', 6, 0, 90],
+      ['Brechó do Recanto', 'casa-recanto', 4, 10, 90],
+      ['Festa Julina do Banco', 'banco-alimentos', 3, 25, 310],
+      ['Campeonato de Férias', 'bola-na-rede', 2, 10, 180],
+      ['Café com Histórias da AMA', 'ama-jaragua', 1, 30, 120],
+    ] as Array<[string, string, number, number, number]>
+  ).map(([titulo, entidadeId, mesesAtras, preco, vendidos], i) => ({
+    id: `e-r${i}`,
+    slug: titulo.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+    entidadeId,
+    titulo,
+    descricao: `${titulo}: toda a renda foi para os projetos da entidade.`,
+    data: dataNoMes(mesesAtras),
+    horario: '19h',
+    local: 'Sede da entidade',
+    ingressos: [{ tipo: preco > 0 ? 'Pago' : 'Gratuito', preco, total: vendidos + 20, vendidos }],
+  }));
+
+  // ---------- Entradas de dinheiro, com data, para os indicadores por período ----------
+  const entradas: Entrada[] = [];
+  const entrada = (e: Omit<Entrada, 'id'>) => entradas.push({ id: `en-${entradas.length + 1}`, ...e });
+  // Ingressos pagos: pedidos de 1 a 4 ingressos nas semanas antes do evento (nunca depois de hoje).
+  [...realizados, ...eventos].forEach((ev) => {
+    const ultimoDia = new Date(Math.min(addDays(new Date(`${ev.data}T12:00:00`), -1).getTime(), SEED_TODAY.getTime()));
+    ev.ingressos
+      .filter((i) => i.preco > 0)
+      .forEach((i) => {
+        for (let restantes = i.vendidos; restantes > 0; ) {
+          const q = Math.min(restantes, int(1, 4));
+          restantes -= q;
+          entrada({ entidadeId: ev.entidadeId, fonte: 'Ingressos', valor: q * i.preco, quantidade: q, data: iso(addDays(ultimoDia, -int(0, 40))) });
+        }
+      });
+  });
+  // Loja: cerca de 18 pedidos por mês.
+  for (let mes = 0; mes < 12; mes++) {
+    for (let n = 0; n < 18; n++) {
+      const produto = pick(produtos);
+      const q = int(1, 3);
+      entrada({ entidadeId: produto.entidadeId, fonte: 'Loja', valor: q * produto.preco, quantidade: q, data: dataNoMes(mes) });
+    }
+  }
+  // Campanhas: os apoios somam exatamente o arrecadado de cada campanha.
+  campanhas.forEach((c) => {
+    const media = c.arrecadado / c.apoiadores;
+    let soma = 0;
+    for (let n = 0; n < c.apoiadores; n++) {
+      const valor = n === c.apoiadores - 1 ? c.arrecadado - soma : Math.max(5, Math.round((media * (0.4 + rand() * 1.2)) / 5) * 5);
+      if (valor <= 0) break;
+      soma += valor;
+      entrada({ entidadeId: c.entidadeId, fonte: 'Campanhas', valor, data: iso(addDays(SEED_TODAY, -int(0, 60))) });
+    }
+  });
+  // Doações avulsas e recorrentes.
+  for (let mes = 0; mes < 12; mes++) {
+    for (let n = 0; n < 10; n++) {
+      entrada({ entidadeId: pick(ENTIDADES).id, fonte: 'Doações', valor: pick([20, 30, 50, 50, 100, 150, 200, 300]), data: dataNoMes(mes) });
+    }
+  }
+
+  return {
+    versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,
+    eventos: [...realizados, ...eventos], produtos, campanhas, entradas,
+  };
 }

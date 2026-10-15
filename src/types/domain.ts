@@ -126,6 +126,19 @@ export interface Campanha {
   terminaEm: string;
 }
 
+export type FonteReceita = 'Ingressos' | 'Loja' | 'Campanhas' | 'Doações';
+
+/** Uma entrada de dinheiro: venda de ingresso ou produto, apoio a campanha ou doação. */
+export interface Entrada {
+  id: string;
+  entidadeId: string;
+  fonte: FonteReceita;
+  valor: number;
+  data: string;
+  /** Ingressos ou produtos no pedido (vendas). */
+  quantidade?: number;
+}
+
 /** Tudo o que o protótipo guarda; amanhã vem da API. */
 export interface MockDb {
   versao: number;
@@ -139,4 +152,5 @@ export interface MockDb {
   eventos: Evento[];
   produtos: Produto[];
   campanhas: Campanha[];
+  entradas: Entrada[];
 }
