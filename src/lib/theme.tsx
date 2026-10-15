@@ -4,7 +4,7 @@ export type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'gera.theme';
 
-/** Mesma regra do script inline do index.html: escolha salva, senão a preferência do sistema. */
+/** Escolha salva, senão o data-theme que a página já tem, senão a preferência do sistema. */
 function initialTheme(): Theme {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -12,6 +12,9 @@ function initialTheme(): Theme {
   } catch {
     // segue para a preferência do sistema
   }
+  // Tema que a página já recebeu (script do index.html ou quem hospeda a prévia).
+  const current = document.documentElement.dataset.theme;
+  if (current === 'light' || current === 'dark') return current;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 

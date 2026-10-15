@@ -30,3 +30,4 @@ O `tailwind.config.ts` remove a paleta padrão do Tailwind (`bg-red-500` nem é 
 - `npm run dev`: servidor de desenvolvimento
 - `npm run build`: checagem de cores + `tsc -b` + `vite build` (rode antes de cada commit)
 - `npm run check:tokens`: só a checagem de cores
+- `npm run build:static`: prévia para publicar como página no claude.ai (`dist-static/preview.html` + `assets/`). Usa `MemoryRouter`, porque a página roda num quadro sem URLs próprias.

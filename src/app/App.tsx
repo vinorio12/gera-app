@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LucideProvider } from 'lucide-react';
 import { PublicLayout } from '../components/layout/PublicLayout';
 import { NotFound } from '../components/shared/NotFound';
@@ -18,6 +18,10 @@ const EntidadePortal = lazy(() => import('../features/entidade/EntidadePortal'))
 const VoluntarioPortal = lazy(() => import('../features/voluntario/VoluntarioPortal'));
 const ParceiroPortal = lazy(() => import('../features/parceiro/ParceiroPortal'));
 
+// A prévia publicada como página (npm run build:static) roda num quadro sem URLs próprias,
+// então guarda a rota em memória. O app de verdade usa as URLs do navegador.
+const Router = import.meta.env.VITE_ROUTER === 'memory' ? MemoryRouter : BrowserRouter;
+
 function Portal({ role, children }: { role: Role; children: ReactNode }) {
   return (
     <RequireRole role={role}>
@@ -31,7 +35,7 @@ export function App() {
     <ThemeProvider>
       <AuthProvider>
         <LucideProvider strokeWidth={1.75}>
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               <Route element={<PublicLayout />}>
                 <Route index element={<HomePage />} />
@@ -61,7 +65,7 @@ export function App() {
               <Route path="app/*" element={<Portal role="voluntario"><VoluntarioPortal /></Portal>} />
               <Route path="parceiro/*" element={<Portal role="parceiro"><ParceiroPortal /></Portal>} />
             </Routes>
-          </BrowserRouter>
+          </Router>
         </LucideProvider>
       </AuthProvider>
     </ThemeProvider>

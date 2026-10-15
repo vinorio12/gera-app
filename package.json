@@ -8,7 +8,8 @@
     "build": "node scripts/check-tokens.mjs && tsc -b && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview",
-    "check:tokens": "node scripts/check-tokens.mjs"
+    "check:tokens": "node scripts/check-tokens.mjs",
+    "build:static": "node scripts/check-tokens.mjs && tsc -b && vite build --mode static --base ./ --outDir dist-static && node scripts/artifact-page.mjs"
   },
   "dependencies": {
     "@gera/design-system": "file:./packages/gera-ds",
