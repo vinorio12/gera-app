@@ -6,7 +6,7 @@ import { PageHeader } from '../../components/shared/PageHeader';
 import { RankingBars } from '../../components/shared/RankingBars';
 import { ErrorState, Skeleton } from '../../components/shared/States';
 import { inputClass, labelClass } from '../../components/ui/form';
-import { formatDateShort } from '../../lib/format';
+import { formatDateShort, formatMoeda } from '../../lib/format';
 import { variacao } from '../../lib/variacao';
 import { useEntidades, usePainelAdmin } from '../../services/hooks';
 
@@ -149,7 +149,7 @@ export function VisaoGeralPage() {
                   <li key={p.id} className="flex items-start justify-between gap-3 py-3">
                     <div className="min-w-0">
                       <p className="font-semibold text-ink">{p.nome}</p>
-                      <p className="text-sm text-ink-muted">{p.entidadeNome} · {formatBRL(p.preco)}</p>
+                      <p className="text-sm text-ink-muted">{p.entidadeNome} · {formatMoeda(p.preco)}</p>
                     </div>
                     <span
                       className={

@@ -10,3 +10,7 @@ export const formatDateShort = (isoDate: string) => format(parseDate(isoDate), "
 export const formatDateTime = (isoDate: string) => format(parseDate(isoDate), "dd/MM/yyyy 'às' HH:mm");
 /** outubro de 2026 */
 export const formatMonth = (isoDate: string) => format(parseDate(isoDate), "MMMM 'de' yyyy", { locale: ptBR });
+
+const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+/** R$ 49,90. Para preços e valores a pagar; o formatBRL do design system arredonda (é para indicadores). */
+export const formatMoeda = (valor: number) => moeda.format(valor);

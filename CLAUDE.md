@@ -21,6 +21,8 @@ App React 18 + TypeScript + Vite da plataforma GERA (Comitê Social ACIJS). O de
 - `src/services`: funções assíncronas por domínio (amanhã chamam a API) e `hooks.ts` com os hooks do TanStack Query. As telas usam só os hooks. Toda mutação passa por `useGeraMutation`, que recarrega as consultas.
 - `src/services/indicadores.ts`: indicadores dos painéis por período (com comparação ao período anterior só quando há dados para comparar). Os gráficos usam Recharts com cores lidas dos tokens por `useTokenColors` (o Recharts escreve a cor direto no SVG); rótulos e valores sempre em texto, e todo gráfico tem "Ver como tabela".
 - `src/lib/carteirinha.ts`: regras puras da carteirinha (4 passos, status pela regra dos 6 meses, validade, elegibilidade e o QR temporário).
+- Site público em `src/features/publico` (dados de `src/services/publico.ts`, sem dados pessoais). Componentes do design system que renderizam `<a href>` (como o `EventCard`) ficam dentro de `RouterLinks`, para navegar pelo router sem recarregar (e funcionar na prévia). O carrinho da loja fica em `src/lib/cart.tsx`.
+- Dinheiro: `formatBRL` (design system) arredonda para reais inteiros e serve para indicadores; para preços e valores a pagar use `formatMoeda` (`src/lib/format.ts`, com centavos).
 - Telas ainda não construídas usam `ScreenPlaceholder` com o resumo do item de navegação. Ao construir uma, troque a rota provisória pela tela de verdade.
 
 ## Estilos
