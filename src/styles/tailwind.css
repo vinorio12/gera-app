@@ -1,2 +1,13 @@
 @tailwind components;
 @tailwind utilities;
+
+/* Foco visível em tudo que é interativo: anel amarelo de 3px (os .gr-btn já têm o seu). */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
+}

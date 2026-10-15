@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import './styles/tailwind-base.css';
 import '@gera/design-system/gera.css';
 import './styles/tailwind.css';
-import App from './App';
+import { App } from './app/App';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
