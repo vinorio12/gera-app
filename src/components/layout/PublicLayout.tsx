@@ -9,6 +9,15 @@ import { IconButton } from '../shared/IconButton';
 import { SkipLink } from '../shared/SkipLink';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { ButtonLink } from '../ui/ButtonLink';
+import acijsLogo from '../../assets/idealizadores/acijs.png';
+import catolicaLogo from '../../assets/idealizadores/catolica.png';
+import wegLogo from '../../assets/idealizadores/weg.png';
+
+const IDEALIZADORES = [
+  { src: acijsLogo, alt: 'ACIJS, Associação Empresarial de Jaraguá do Sul' },
+  { src: wegLogo, alt: 'WEG' },
+  { src: catolicaLogo, alt: 'Católica SC, Centro Universitário' },
+];
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   cx(
@@ -106,13 +115,20 @@ function PublicFooter() {
         </div>
       </div>
       <div className="bg-verde-950">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-4 px-4 py-5 text-sm">
-          <span>Uma iniciativa do Comitê Social ACIJS</span>
-          {/* Espaço do logo da ACIJS: trocar pelo arquivo oficial. A marca "Jaraguá do Sul · Orgulho de Ser"
-              entra à direita, separada por um fio vertical, só quando houver autorização da Prefeitura. */}
-          <span className="font-display text-2xl leading-none tracking-[0.08em]" aria-label="ACIJS">
-            ACIJS
-          </span>
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm font-semibold">Uma iniciativa do Comitê Social ACIJS e da WEG</p>
+          {/* A marca "Jaraguá do Sul · Orgulho de Ser" só entra quando houver autorização da Prefeitura. */}
+          <div className="flex flex-col gap-2 md:items-end">
+            <p className="font-display text-base leading-5 tracking-[0.08em] opacity-90">IDEALIZADORES</p>
+            <ul className="flex flex-wrap gap-2">
+              {IDEALIZADORES.map(({ src, alt }) => (
+                // Placa branca (papel) em qualquer tema: os logos oficiais são coloridos e pedem fundo claro.
+                <li key={alt} className="flex h-12 items-center rounded-md bg-papel px-2.5 sm:h-14 sm:px-3">
+                  <img src={src} alt={alt} className="h-8 w-auto sm:h-9" />
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </footer>
