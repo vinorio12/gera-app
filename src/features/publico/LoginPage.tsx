@@ -1,7 +1,9 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, PortalVerbo } from '@gera/design-system';
 import { PageHeader } from '../../components/shared/PageHeader';
-import { DEMO_PROFILES, PORTAL_HOME, ROLE_LABEL, roleForPath, useAuth, type Role } from '../../lib/auth';
+import { useToast } from '../../components/shared/Toast';
+import { DEMO_PROFILES, PORTAL_HOME, ROLE_LABEL, roleForPath, useAuth, type ProfileKey, type Role } from '../../lib/auth';
+import { restaurarDadosDeExemplo } from '../../services/hooks';
 
 const ORDER: Role[] = ['voluntario', 'entidade', 'parceiro', 'admin'];
 
@@ -25,13 +27,14 @@ const isInternalPath = (path: string | null): path is string => !!path && path.s
 /** Login simulado: o seletor "entrar como" do protótipo. */
 export function LoginPage() {
   const { session, signIn } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const next = params.get('next');
   const nextRole = isInternalPath(next) ? roleForPath(next) : null;
 
-  const enter = (role: Role) => {
-    signIn(role);
+  const enter = (profile: ProfileKey) => {
+    const { role } = signIn(profile);
     // Volta para onde a pessoa estava se a tela for pública ou do perfil escolhido.
     const target = isInternalPath(next) && (nextRole === null || nextRole === role) ? next : PORTAL_HOME[role];
     navigate(target, { replace: true });
@@ -64,9 +67,37 @@ export function LoginPage() {
             <Button className="mt-auto justify-center" onClick={() => enter(role)}>
               {BUTTON[role]}
             </Button>
+            {role === 'voluntario' && (
+              <Button variant="ghost" className="justify-center" onClick={() => enter('voluntario-novo')}>
+                Entrar como Bruna Costa (cadastro novo)
+              </Button>
+            )}
           </li>
         ))}
       </ul>
+      <section className="mt-10 flex flex-col items-start gap-3 rounded-lg border border-border bg-bg-card p-5 shadow-card" aria-labelledby="jornada">
+        <h2 id="jornada" className="text-lg font-bold text-ink">
+          Roteiro da jornada da carteirinha
+        </h2>
+        <ol className="list-decimal space-y-1 pl-5 text-sm text-ink-muted">
+          <li>Entre como <strong className="text-ink">Bruna Costa</strong>: a carteirinha mostra o que falta e o código de presença.</li>
+          <li>Entre como <strong className="text-ink">AMA Jaraguá</strong>, aprove a Bruna em Voluntários e faça o check-in dela em Banco de horas (digite JS-2026-004913).</li>
+          <li>Volte para a Bruna: a carteirinha foi liberada, com QR que se renova a cada minuto.</li>
+          <li>Entre como <strong className="text-ink">Café Exemplo</strong>, digite o mesmo número, veja "Elegível" e registre o uso.</li>
+        </ol>
+        <p className="text-sm text-ink-muted">
+          As mudanças ficam salvas neste navegador. Para começar do zero antes de uma apresentação:
+        </p>
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            await restaurarDadosDeExemplo();
+            toast.show('Pronto: os dados de exemplo voltaram ao início.');
+          }}
+        >
+          Restaurar dados de exemplo
+        </Button>
+      </section>
     </div>
   );
 }

@@ -4,21 +4,27 @@ import type { Portal } from '@gera/design-system';
 /** Os perfis autenticados são os mesmos quatro portais do design system. */
 export type Role = Portal;
 
+/** Perfis do seletor "entrar como": os quatro portais e uma voluntária com cadastro novo. */
+export type ProfileKey = Role | 'voluntario-novo';
+
 export interface Session {
+  profile: ProfileKey;
   role: Role;
   /** Nome mostrado na interface. */
   userName: string;
+  /** Registro da pessoa nos dados (voluntário). */
+  userId?: string;
   /** Entidade ou empresa do usuário (multi-tenant): Entidade e Parceiro só enxergam a própria. */
   orgId?: string;
   orgName?: string;
 }
 
-/** Perfis do seletor "entrar como" do protótipo. */
-export const DEMO_PROFILES: Record<Role, Session> = {
-  admin: { role: 'admin', userName: 'Comitê Social ACIJS' },
-  entidade: { role: 'entidade', userName: 'Equipe AMA Jaraguá', orgId: 'ama-jaragua', orgName: 'AMA Jaraguá' },
-  voluntario: { role: 'voluntario', userName: 'Alex Silva' },
-  parceiro: { role: 'parceiro', userName: 'Café Exemplo', orgId: 'cafe-exemplo', orgName: 'Café Exemplo' },
+export const DEMO_PROFILES: Record<ProfileKey, Session> = {
+  admin: { profile: 'admin', role: 'admin', userName: 'Comitê Social ACIJS' },
+  entidade: { profile: 'entidade', role: 'entidade', userName: 'Equipe AMA Jaraguá', orgId: 'ama-jaragua', orgName: 'AMA Jaraguá' },
+  voluntario: { profile: 'voluntario', role: 'voluntario', userName: 'Alex Silva', userId: 'v-alex' },
+  'voluntario-novo': { profile: 'voluntario-novo', role: 'voluntario', userName: 'Bruna Costa', userId: 'v-bruna' },
+  parceiro: { profile: 'parceiro', role: 'parceiro', userName: 'Café Exemplo', orgId: 'p-cafe', orgName: 'Café Exemplo' },
 };
 
 export const PORTAL_HOME: Record<Role, string> = {
@@ -49,8 +55,8 @@ function readStoredSession(): Session | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const role = (JSON.parse(raw) as { role?: string }).role;
-    return role && role in DEMO_PROFILES ? DEMO_PROFILES[role as Role] : null;
+    const profile = (JSON.parse(raw) as { profile?: string }).profile;
+    return profile && profile in DEMO_PROFILES ? DEMO_PROFILES[profile as ProfileKey] : null;
   } catch {
     return null;
   }
@@ -60,7 +66,7 @@ interface AuthContextValue {
   session: Session | null;
   /** true depois de "Sair": as guardas mandam para o login sem o aviso de "entre como". */
   signedOut: boolean;
-  signIn: (role: Role) => Session;
+  signIn: (profile: ProfileKey) => Session;
   signOut: () => void;
 }
 
@@ -70,12 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(readStoredSession);
   const [signedOut, setSignedOut] = useState(false);
 
-  const signIn = useCallback((role: Role) => {
-    const next = DEMO_PROFILES[role];
+  const signIn = useCallback((profile: ProfileKey) => {
+    const next = DEMO_PROFILES[profile];
     setSession(next);
     setSignedOut(false);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ role }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ profile }));
     } catch {
       // Sem storage (aba privada): a sessão vale só até recarregar.
     }

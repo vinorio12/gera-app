@@ -13,7 +13,11 @@
   },
   "dependencies": {
     "@gera/design-system": "file:./packages/gera-ds",
+    "@tanstack/react-query": "^5.104.3",
+    "@zxing/browser": "^0.2.1",
+    "date-fns": "^4.4.0",
     "lucide-react": "^1.57.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.6"

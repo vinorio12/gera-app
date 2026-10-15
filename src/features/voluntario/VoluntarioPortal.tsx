@@ -2,35 +2,30 @@ import { Link, Route, Routes } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { PortalVerbo } from '@gera/design-system';
 import { MobileLayout } from '../../components/layout/MobileLayout';
-import { EmptyState } from '../../components/shared/EmptyState';
 import { NotFound } from '../../components/shared/NotFound';
 import { placeholderRoutes } from '../../components/shared/placeholderRoutes';
-import { useSession } from '../../lib/auth';
 import { VOLUNTARIO_MORE, VOLUNTARIO_TABS } from '../../lib/portals';
+import { AcoesPage } from './AcoesPage';
+import { CarteirinhaPage } from './CarteirinhaPage';
+import { OportunidadesPage } from './OportunidadesPage';
+import { VoluntarioHome } from './VoluntarioHome';
+
+/** Telas já construídas; o resto da navegação ainda usa a tela provisória. */
+const PRONTAS = new Set(['', 'oportunidades', 'carteirinha', 'acoes', 'mais']);
 
 export default function VoluntarioPortal() {
   return (
     <Routes>
       <Route element={<MobileLayout portal="voluntario" tabs={VOLUNTARIO_TABS} moreItems={VOLUNTARIO_MORE} />}>
         <Route index element={<VoluntarioHome />} />
-        {placeholderRoutes(VOLUNTARIO_TABS.filter((tab) => tab.path !== 'mais'))}
+        <Route path="oportunidades" element={<OportunidadesPage />} />
+        <Route path="carteirinha" element={<CarteirinhaPage />} />
+        <Route path="acoes" element={<AcoesPage />} />
         <Route path="mais" element={<VoluntarioMais />} />
-        {placeholderRoutes(VOLUNTARIO_MORE)}
+        {placeholderRoutes([...VOLUNTARIO_TABS, ...VOLUNTARIO_MORE].filter((item) => !PRONTAS.has(item.path)))}
         <Route path="*" element={<NotFound homePath="/app" />} />
       </Route>
     </Routes>
-  );
-}
-
-function VoluntarioHome() {
-  const { userName } = useSession();
-  const firstName = userName.split(' ')[0];
-  const home = VOLUNTARIO_TABS[0]!;
-  return (
-    <div className="flex flex-col gap-4">
-      <PortalVerbo portal="voluntario" subtitle={`Olá, ${firstName}!`} />
-      <EmptyState title="Seu início entra na próxima etapa" description={home.summary} />
-    </div>
   );
 }
 
