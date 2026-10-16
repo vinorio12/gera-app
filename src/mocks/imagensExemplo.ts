@@ -28,3 +28,33 @@ export function bannerExemplo(fundo: string, forma1: string, forma2: string): st
       `</svg>`,
   );
 }
+
+/** Iniciais de um nome de entidade ou empresa: a primeira letra das duas primeiras palavras com mais de 2 letras. */
+export const iniciaisExemplo = (nome: string) =>
+  nome
+    .split(/\s+/)
+    .filter((p) => p.length > 2)
+    .slice(0, 2)
+    .map((p) => p[0]!.toUpperCase())
+    .join('');
+
+/** Combinações de tokens para variar os exemplos: [fundo do banner, forma 1, forma 2, fundo do logo, texto do logo, detalhe do logo]. */
+export const PALETAS_EXEMPLO: ReadonlyArray<readonly [string, string, string, string, string, string]> = [
+  ['brand-deep', 'primary', 'highlight', 'brand-deep', 'papel', 'primary'],
+  ['primary', 'brand-deep', 'secondary', 'portal-conectar', 'tinta', 'brand-deep'],
+  ['brand-deep', 'secondary', 'primary', 'highlight', 'tinta', 'brand-deep'],
+  ['primary', 'highlight', 'brand-deep', 'primary', 'papel', 'secondary'],
+  ['portal-conectar', 'brand-deep', 'primary', 'brand-deep', 'papel', 'highlight'],
+  ['highlight', 'brand-deep', 'primary', 'primary', 'papel', 'highlight'],
+];
+
+/** Foto de perfil de exemplo: silhueta simples (cabeça e ombros) sobre um token. Não é foto de pessoa real. */
+export function avatarExemplo(fundo: string, silhueta: string): string {
+  return comoDataUrl(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="320" height="320">` +
+      `<rect width="320" height="320" fill="${corDoToken(fundo)}"/>` +
+      `<circle cx="160" cy="125" r="62" fill="${corDoToken(silhueta)}"/>` +
+      `<path d="M40 320c0-72 50-112 120-112s120 40 120 112z" fill="${corDoToken(silhueta)}"/>` +
+      `</svg>`,
+  );
+}

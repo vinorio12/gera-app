@@ -199,6 +199,8 @@ test.describe('foto do voluntário', () => {
     const erros = vigiarErros(page);
     await preparar(page, { perfil: 'voluntario' });
     await page.goto('/app/perfil');
+    // O Alex já tem uma foto de exemplo: remove para testar o envio.
+    await page.getByRole('button', { name: 'Remover: Foto de perfil' }).click();
     await expect(page.getByText('Sem imagem')).toBeVisible();
     await page.locator('input[type=file]').setInputFiles(await imagem(page, 600, 900));
     const foto = page.getByRole('img', { name: 'Foto de Alex Silva' });

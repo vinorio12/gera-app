@@ -2,7 +2,7 @@
 // Nenhum nome de pessoa ou empresa real além dos que estão no documento de requisitos.
 import { addDays, addMonths, format, subMonths } from 'date-fns';
 import { cpfFromBase } from '../lib/cpf';
-import { bannerExemplo, logoExemplo } from './imagensExemplo';
+import { PALETAS_EXEMPLO, avatarExemplo, bannerExemplo, iniciaisExemplo, logoExemplo } from './imagensExemplo';
 import type {
   Area,
   Beneficio,
@@ -26,7 +26,7 @@ import type {
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 10;
+export const DB_VERSION = 11;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -126,13 +126,12 @@ export function createSeed(): MockDb {
       { id: `${e.id}-m2`, nome: `Equipe ${e.nome}`, email: `equipe@${e.slug}.org.br`, papel: 'Equipe' as const, desde: '2025-04-02', convitePendente: false },
     ],
   }));
-  // Logo e banner de exemplo (SVG gerado com as cores dos tokens) em duas entidades.
-  const ama = entidades.find((e) => e.id === 'ama-jaragua')!;
-  ama.logoUrl = logoExemplo('AMA', 'brand-deep', 'papel', 'primary');
-  ama.bannerUrl = bannerExemplo('brand-deep', 'primary', 'highlight');
-  const itapocu = entidades.find((e) => e.id === 'instituto-itapocu')!;
-  itapocu.logoUrl = logoExemplo('RI', 'portal-conectar', 'tinta', 'brand-deep');
-  itapocu.bannerUrl = bannerExemplo('primary', 'brand-deep', 'secondary');
+  // Logo e banner de exemplo (SVG gerado com as cores dos tokens) em todas as entidades.
+  entidades.forEach((e, i) => {
+    const [bf, f1, f2, lf, lt, ld] = PALETAS_EXEMPLO[i % PALETAS_EXEMPLO.length]!;
+    e.logoUrl = logoExemplo(e.id === 'ama-jaragua' ? 'AMA' : iniciaisExemplo(e.nome), lf, lt, ld);
+    e.bannerUrl = bannerExemplo(bf, f1, f2);
+  });
   const projetosDe = (entidadeId: string) => ENTIDADES.find((e) => e.id === entidadeId)!.projetos;
 
   // ---------- Voluntários: Alex e Bruna fixos, mais 118 com os quatro status ----------
@@ -268,13 +267,12 @@ export function createSeed(): MockDb {
     email: `contato@${id.slice(2)}.exemplo.com.br`,
     contato: 'Gerência da loja',
   }));
-  // Logo e banner de exemplo em dois parceiros.
-  const cafe = parceiros.find((p) => p.id === 'p-cafe')!;
-  cafe.logoUrl = logoExemplo('CE', 'highlight', 'tinta', 'brand-deep');
-  cafe.bannerUrl = bannerExemplo('brand-deep', 'highlight', 'primary');
-  const livrariaParceira = parceiros.find((p) => p.id === 'p-livraria')!;
-  livrariaParceira.logoUrl = logoExemplo('PN', 'primary', 'papel', 'secondary');
-  livrariaParceira.bannerUrl = bannerExemplo('primary', 'secondary', 'brand-deep');
+  // Logo e banner de exemplo em todos os parceiros aprovados do começo da lista.
+  parceiros.forEach((p, i) => {
+    const [bf, f1, f2, lf, lt, ld] = PALETAS_EXEMPLO[(i + 2) % PALETAS_EXEMPLO.length]!;
+    p.logoUrl = logoExemplo(iniciaisExemplo(p.nome), lf, lt, ld);
+    p.bannerUrl = bannerExemplo(bf, f1, f2);
+  });
   // Economia estimada por uso (em reais), informada pelo parceiro para o relatório ESG.
   const ECONOMIA: Record<string, number> = {
     '10% em qualquer pedido': 3, 'Café coado grátis no aniversário': 6, '15% em pães e salgados': 2.5, 'Sobremesa grátis no almoço': 9,
@@ -681,6 +679,15 @@ export function createSeed(): MockDb {
         if (o.data >= iso(SEED_TODAY)) o.inscritos = o.inscritos.filter((x) => x !== id);
       });
     });
+
+  // Foto de perfil de exemplo (silhueta, nunca foto real) no Alex e em um a cada três voluntários.
+  const FUNDOS_AVATAR: ReadonlyArray<readonly [string, string]> = [['primary', 'papel'], ['highlight', 'brand-deep'], ['brand-deep', 'portal-conectar'], ['portal-conectar', 'brand-deep']];
+  voluntarios.forEach((v, i) => {
+    if (v.id === 'v-alex' || (v.id !== 'v-bruna' && i % 3 === 0)) {
+      const [fundo, silhueta] = FUNDOS_AVATAR[i % FUNDOS_AVATAR.length]!;
+      v.fotoUrl = avatarExemplo(fundo, silhueta);
+    }
+  });
 
   return {
     versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,
