@@ -15,6 +15,7 @@ import { inputClass, labelClass } from '../../components/ui/form';
 import { isoDay } from '../../lib/carteirinha';
 import { isValidCpf } from '../../lib/cpf';
 import { formatDate } from '../../lib/format';
+import { ErroDeImagem, prepararImagem } from '../../lib/imagem';
 import { buscarCep, cadastrarVoluntario, salvarFoto } from '../../services/cadastro';
 import { mensagemDeErro, useEntidades, useGeraMutation, useTermoVigente } from '../../services/hooks';
 import { TermoTexto } from '../../components/shared/TermoTexto';
@@ -306,29 +307,17 @@ function Concluido({ id, registro, entidade, nome }: { id: string; registro: str
 
   const escolherFoto = (e: ChangeEvent<HTMLInputElement>) => {
     const arquivo = e.target.files?.[0];
+    e.target.value = '';
     if (!arquivo) return;
     setErroFoto(null);
-    const img = new Image();
-    img.onload = async () => {
-      // Reduz para 160px e JPEG: a foto vai para a carteirinha e precisa ser leve.
-      const lado = 160;
-      const canvas = document.createElement('canvas');
-      canvas.width = lado;
-      canvas.height = lado;
-      const menor = Math.min(img.width, img.height);
-      canvas.getContext('2d')!.drawImage(img, (img.width - menor) / 2, (img.height - menor) / 2, menor, menor, 0, 0, lado, lado);
-      const url = canvas.toDataURL('image/jpeg', 0.8);
-      URL.revokeObjectURL(img.src);
-      try {
+    // Recorta em quadrado de 320 px e reduz: a foto vai para a carteirinha e precisa ser leve.
+    prepararImagem(arquivo, 'foto')
+      .then(async (url) => {
         await salvarFoto(id, url);
         setFoto(url);
         toast.show('Foto salva. Ela aparece na sua carteirinha.');
-      } catch (err) {
-        setErroFoto(mensagemDeErro(err));
-      }
-    };
-    img.onerror = () => setErroFoto('Não conseguimos abrir essa imagem. Tente uma foto JPG ou PNG.');
-    img.src = URL.createObjectURL(arquivo);
+      })
+      .catch((err) => setErroFoto(err instanceof ErroDeImagem ? err.message : mensagemDeErro(err)));
   };
 
   return (

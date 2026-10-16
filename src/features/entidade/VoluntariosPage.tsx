@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button, StatusBadge, cx, formatHours, type VolunteerStatus } from '@gera/design-system';
 import { EmptyState } from '../../components/shared/EmptyState';
+import { Avatar } from '../../components/shared/Imagens';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, SkeletonList } from '../../components/shared/States';
 import { useToast } from '../../components/shared/Toast';
@@ -47,13 +48,16 @@ export function VoluntariosPage() {
                 <ul className="flex flex-col divide-y divide-border">
                   {pendentes.map(({ voluntario: v }) => (
                     <li key={v.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                      <div className="min-w-0">
-                        <Link to={v.id} className="font-semibold text-link hover:underline">
-                          {v.nome}
-                        </Link>
-                        <p className="text-sm text-ink-muted">
-                          Cadastro em {formatDate(v.cadastroEm)} · {v.areas.join(', ')}
-                        </p>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar src={v.fotoUrl} nome={v.nome} tipo="foto" tamanho={40} />
+                        <div className="min-w-0">
+                          <Link to={v.id} className="font-semibold text-link hover:underline">
+                            {v.nome}
+                          </Link>
+                          <p className="text-sm text-ink-muted">
+                            Cadastro em {formatDate(v.cadastroEm)} · {v.areas.join(', ')}
+                          </p>
+                        </div>
                       </div>
                       <Button
                         disabled={aprovar.isPending}
@@ -116,9 +120,12 @@ export function VoluntariosPage() {
                       {visiveis.map((r) => (
                         <tr key={r.voluntario.id}>
                           <td className="px-4 py-3">
-                            <Link to={r.voluntario.id} className="font-semibold text-link hover:underline">
-                              {r.voluntario.nome}
-                            </Link>
+                            <div className="flex items-center gap-3">
+                              <Avatar src={r.voluntario.fotoUrl} nome={r.voluntario.nome} tipo="foto" tamanho={36} />
+                              <Link to={r.voluntario.id} className="font-semibold text-link hover:underline">
+                                {r.voluntario.nome}
+                              </Link>
+                            </div>
                           </td>
                           <td className="px-4 py-3">
                             <StatusBadge status={r.status} />

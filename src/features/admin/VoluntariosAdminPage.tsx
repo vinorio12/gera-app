@@ -3,6 +3,7 @@ import { StatusBadge, formatHours, type VolunteerStatus } from '@gera/design-sys
 import { Chips } from '../../components/shared/Chips';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { Exportar } from '../../components/shared/Exportar';
+import { Avatar } from '../../components/shared/Imagens';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, SkeletonList } from '../../components/shared/States';
 import { Campo } from '../../components/ui/Campo';
@@ -107,7 +108,12 @@ export function VoluntariosAdminPage() {
                   <tbody className="divide-y divide-border">
                     {filtrados.slice(0, mostrar).map((r) => (
                       <tr key={r.voluntario.id}>
-                        <td className="px-4 py-3 font-semibold text-ink">{r.voluntario.nome}</td>
+                        <td className="px-4 py-3 font-semibold text-ink">
+                          <div className="flex items-center gap-3">
+                            <Avatar src={r.voluntario.fotoUrl} nome={r.voluntario.nome} tipo="foto" tamanho={36} />
+                            {r.voluntario.nome}
+                          </div>
+                        </td>
                         <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                         <td className="px-4 py-3 text-ink-muted">{r.entidades.join(', ')}</td>
                         <td className="px-4 py-3 text-right tabular-nums text-ink">{formatHours(r.totalHoras)}</td>

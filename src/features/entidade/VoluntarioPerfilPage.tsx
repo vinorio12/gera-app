@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button, StatusBadge, formatHours } from '@gera/design-system';
 import { Dialog } from '../../components/shared/Dialog';
 import { EmptyState } from '../../components/shared/EmptyState';
+import { Avatar } from '../../components/shared/Imagens';
 import { HoursTimeline } from '../../components/shared/HoursTimeline';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, InlineError, SkeletonList } from '../../components/shared/States';
@@ -85,6 +86,7 @@ export function VoluntarioPerfilPage() {
         <div className="flex flex-col gap-4">
           <section className="flex flex-col gap-3 rounded-lg border border-border bg-bg-card p-5 shadow-card">
             <div className="flex flex-wrap items-center gap-3">
+              <Avatar src={v.fotoUrl} nome={v.nome} tipo="foto" tamanho={64} />
               <StatusBadge status={status} />
               <span className="font-display text-3xl leading-none tabular-nums text-ink">{formatHours(totalHoras).toUpperCase()}</span>
               <span className="text-sm text-ink-muted">na {orgName}</span>

@@ -5,6 +5,7 @@ import { Button, KpiCard, PortalVerbo, cx, formatBRL, formatNumber } from '@gera
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { CopyField } from '../../components/shared/CopyField';
 import { EmptyState } from '../../components/shared/EmptyState';
+import { Avatar, UploadImagem } from '../../components/shared/Imagens';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, InlineError, Skeleton, SkeletonList } from '../../components/shared/States';
 import { useToast } from '../../components/shared/Toast';
@@ -15,7 +16,7 @@ import { Campo } from '../../components/ui/Campo';
 import { inputClass } from '../../components/ui/form';
 import { useSession } from '../../lib/auth';
 import { formatMoeda } from '../../lib/format';
-import { excluirBeneficio, salvarBeneficio, salvarEmpresa } from '../../services/beneficios';
+import { excluirBeneficio, salvarBeneficio, salvarEmpresa, salvarImagemEmpresa } from '../../services/beneficios';
 import { mensagemDeErro, useBeneficiosDoParceiro, useEmpresa, useGeraMutation, usePainelEsg } from '../../services/hooks';
 import { CATEGORIAS_BENEFICIO, type Beneficio, type CategoriaBeneficio, type Parceiro, type StatusAprovacao } from '../../types/domain';
 
@@ -32,7 +33,10 @@ export function PainelEsgPage() {
   const painel = usePainelEsg(orgId!);
   return (
     <div className="flex flex-col gap-4">
-      <PortalVerbo portal="parceiro" subtitle={orgName} />
+      <div className="flex items-center gap-3">
+        {painel.data?.logoUrl && <Avatar src={painel.data.logoUrl} nome={orgName ?? 'Empresa parceira'} tamanho={48} />}
+        <PortalVerbo portal="parceiro" subtitle={orgName} />
+      </div>
       <PageHeader title="Painel" description="O impacto dos seus benefícios, pronto para o relatório ESG da empresa." />
       {painel.isPending ? (
         <SkeletonList rows={3} />
@@ -232,9 +236,38 @@ export function EmpresaPage() {
       ) : empresa.isError ? (
         <ErrorState error={empresa.error} onRetry={() => empresa.refetch()} />
       ) : (
-        <EmpresaForm p={empresa.data} />
+        <div className="flex flex-col gap-4">
+          <ImagensEmpresa p={empresa.data} />
+          <EmpresaForm p={empresa.data} />
+        </div>
       )}
     </>
+  );
+}
+
+function ImagensEmpresa({ p }: { p: Parceiro }) {
+  const salvarLogo = useGeraMutation((d: string | null) => salvarImagemEmpresa(p.id, 'logo', d));
+  const salvarBanner = useGeraMutation((d: string | null) => salvarImagemEmpresa(p.id, 'banner', d));
+  return (
+    <section aria-labelledby="imagens-empresa" className={`${cardClass} flex flex-col gap-5 p-4`}>
+      <h2 id="imagens-empresa" className="text-lg font-bold text-ink">Logo e banner</h2>
+      <UploadImagem
+        tipo="foto"
+        titulo="Foto de perfil da empresa"
+        alt={`Logo: ${p.nome}`}
+        valor={p.logoUrl}
+        dica="Aparece nos benefícios dos voluntários, na página de parceiros e no painel. JPG, PNG ou WebP, cortada em quadrado."
+        onSalvar={(d) => salvarLogo.mutateAsync(d)}
+      />
+      <UploadImagem
+        tipo="banner"
+        titulo="Banner da empresa"
+        alt={`Banner: ${p.nome}`}
+        valor={p.bannerUrl}
+        dica="Aparece no cartão da empresa na página de parceiros. JPG, PNG ou WebP, cortada em 16:5 (1600 × 500)."
+        onSalvar={(d) => salvarBanner.mutateAsync(d)}
+      />
+    </section>
   );
 }
 

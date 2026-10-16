@@ -5,6 +5,7 @@ import { commit, delay, getDb, newId } from '../mocks/db';
 import { dadosCarteirinha, isoDay } from '../lib/carteirinha';
 import type { Beneficio, CategoriaBeneficio, Parceiro } from '../types/domain';
 import { CATEGORIAS_BENEFICIO } from '../types/domain';
+import { gravarImagem } from './imagens';
 import { auditar } from './sessao';
 import { ServiceError } from './voluntarios';
 
@@ -93,10 +94,18 @@ export async function salvarEmpresa(parceiroId: string, d: DadosEmpresa) {
   );
 }
 
+/** Foto de perfil (logo) ou banner da empresa; null remove. */
+export async function salvarImagemEmpresa(parceiroId: string, qual: 'logo' | 'banner', dataUrl: string | null) {
+  await delay(200);
+  const p = doParceiro(parceiroId);
+  gravarImagem(p, qual === 'logo' ? 'logoUrl' : 'bannerUrl', dataUrl, qual === 'logo' ? 'foto' : 'banner');
+}
+
 // ---------- Parceiro: painel ESG ----------
 
 export interface PainelEsg {
   parceiro: string;
+  logoUrl?: string;
   resgates: number;
   resgatesNoMes: number;
   voluntariosImpactados: number;
@@ -129,6 +138,7 @@ export async function obterPainelEsg(parceiroId: string): Promise<PainelEsg> {
     `fortalece o vínculo da empresa com as causas sociais locais (ODS 17: parcerias e meios de implementação).`;
   return {
     parceiro: p.nome,
+    logoUrl: p.logoUrl,
     resgates: resgates.length,
     resgatesNoMes: resgates.filter((r) => r.em.startsWith(mes)).length,
     voluntariosImpactados: impactados,
@@ -186,6 +196,7 @@ export async function decidirBeneficio(input: { id: string; aprovar: boolean; mo
 
 export interface BeneficioParaVoluntario extends Beneficio {
   parceiro: string;
+  logoUrl?: string;
   endereco: string;
   distanciaKm: number;
 }
@@ -215,7 +226,7 @@ export async function listarBeneficiosParaVoluntario(voluntarioId: string, categ
       .filter((b) => b.status === 'aprovado' && parceiros.has(b.parceiroId) && (!categoria || b.categoria === categoria))
       .map((b) => {
         const p = parceiros.get(b.parceiroId)!;
-        return { ...b, parceiro: p.nome, endereco: p.endereco, distanciaKm: p.distanciaKm };
+        return { ...b, parceiro: p.nome, logoUrl: p.logoUrl, endereco: p.endereco, distanciaKm: p.distanciaKm };
       })
       .sort((a, b) => a.distanciaKm - b.distanciaKm),
   };

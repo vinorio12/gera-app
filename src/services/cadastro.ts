@@ -3,6 +3,7 @@ import { commit, delay, getDb, newId } from '../mocks/db';
 import { isoDay } from '../lib/carteirinha';
 import { isValidCpf } from '../lib/cpf';
 import type { Area, Voluntario } from '../types/domain';
+import { gravarImagem } from './imagens';
 import { ServiceError } from './voluntarios';
 
 export interface Endereco {
@@ -100,12 +101,10 @@ export async function cadastrarVoluntario(d: NovoVoluntario): Promise<{ id: stri
   return { id: v.id, registro: v.registro, entidade: entidade.nome };
 }
 
-/** Guarda a foto do perfil já reduzida (data URL pequena). */
-export async function salvarFoto(voluntarioId: string, dataUrl: string) {
+/** Guarda a foto do perfil já reduzida (data URL), ou remove com null. */
+export async function salvarFoto(voluntarioId: string, dataUrl: string | null) {
   await delay(200);
-  if (dataUrl.length > 60_000) throw new ServiceError('A foto ficou grande demais. Tente outra.');
-  commit((db) => {
-    const v = db.voluntarios.find((x) => x.id === voluntarioId);
-    if (v) v.fotoUrl = dataUrl;
-  });
+  const v = getDb().voluntarios.find((x) => x.id === voluntarioId);
+  if (!v) throw new ServiceError('Não encontramos seu cadastro.');
+  gravarImagem(v, 'fotoUrl', dataUrl, 'foto');
 }

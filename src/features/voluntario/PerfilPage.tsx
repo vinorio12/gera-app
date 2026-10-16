@@ -3,6 +3,7 @@ import { Download, ShieldCheck, Trash2 } from 'lucide-react';
 import { Button, cx } from '@gera/design-system';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { DisponibilidadeGrade } from '../../components/shared/DisponibilidadeGrade';
+import { UploadImagem } from '../../components/shared/Imagens';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { PreviaImpressao } from '../../components/shared/PreviaImpressao';
 import { ErrorState, InlineError, Skeleton } from '../../components/shared/States';
@@ -15,6 +16,7 @@ import { useSession } from '../../lib/auth';
 import { formatDate, formatDateTime } from '../../lib/format';
 import { salvarArquivo } from '../../lib/salvarArquivo';
 import { mensagemDeErro, useGeraMutation, useMeuPerfil } from '../../services/hooks';
+import { salvarFoto } from '../../services/cadastro';
 import { exportarMeusDados, pedirExclusao, salvarMeuPerfil, salvarPreferencias, type MeuPerfil } from '../../services/perfil';
 import { AREAS, type Area, type PreferenciasNotificacao } from '../../types/domain';
 
@@ -30,6 +32,7 @@ export function PerfilPage() {
         <ErrorState error={perfil.error} onRetry={() => perfil.refetch()} />
       ) : (
         <div className="flex flex-col gap-4">
+          <FotoPerfil perfil={perfil.data} />
           <Dados perfil={perfil.data} />
           <Notificacoes perfil={perfil.data} />
           <Termo perfil={perfil.data} />
@@ -37,6 +40,24 @@ export function PerfilPage() {
         </div>
       )}
     </>
+  );
+}
+
+function FotoPerfil({ perfil }: { perfil: MeuPerfil }) {
+  const v = perfil.voluntario;
+  const salvar = useGeraMutation((d: string | null) => salvarFoto(v.id, d));
+  return (
+    <section aria-labelledby="foto-titulo" className={`${cardClass} flex flex-col gap-3 p-4`}>
+      <h2 id="foto-titulo" className="text-lg font-bold text-ink">Sua foto</h2>
+      <UploadImagem
+        tipo="foto"
+        titulo="Foto de perfil"
+        alt={`Foto de ${v.nome}`}
+        valor={v.fotoUrl}
+        dica="Aparece na sua carteirinha e para a entidade. JPG, PNG ou WebP, cortada em quadrado."
+        onSalvar={(d) => salvar.mutateAsync(d)}
+      />
+    </section>
   );
 }
 

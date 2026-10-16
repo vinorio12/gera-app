@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CircleAlert, MapPin } from 'lucide-react';
 import { Chips } from '../../components/shared/Chips';
 import { EmptyState } from '../../components/shared/EmptyState';
+import { Avatar } from '../../components/shared/Imagens';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, SkeletonList } from '../../components/shared/States';
 import { ButtonLink } from '../../components/ui/ButtonLink';
@@ -48,7 +49,10 @@ export function BeneficiosPage() {
             <li key={b.id} className="flex flex-col gap-1 rounded-lg border border-border bg-bg-card p-4 shadow-card">
               <p className="font-display text-base uppercase leading-5 tracking-[0.08em] text-ink-muted">{b.categoria}</p>
               <h2 className="text-lg font-bold leading-6 text-ink">{b.titulo}</h2>
-              <p className="font-semibold text-ink">{b.parceiro}</p>
+              <div className="flex items-center gap-2">
+                {b.logoUrl && <Avatar src={b.logoUrl} nome={b.parceiro} tamanho={32} />}
+                <p className="font-semibold text-ink">{b.parceiro}</p>
+              </div>
               <p className="flex items-start gap-1 text-sm text-ink-muted">
                 <MapPin size={16} aria-hidden className="mt-0.5 shrink-0" />
                 <span>
