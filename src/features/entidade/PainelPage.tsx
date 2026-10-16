@@ -13,7 +13,7 @@ import { usePainelEntidade } from '../../services/hooks';
 const cardClass = 'rounded-lg border border-border bg-bg-card p-5 shadow-card';
 
 const ATALHOS = [
-  { to: 'certificados', label: 'Emitir certificado', icon: Award },
+  { to: 'certificados/emitir', label: 'Emitir certificado', icon: Award },
   { to: 'eventos/novo', label: 'Novo evento', icon: CalendarPlus },
   { to: 'patrocinadores/novo', label: 'Novo patrocinador', icon: Handshake },
   { to: 'loja/novo', label: 'Novo produto', icon: PackagePlus },

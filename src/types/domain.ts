@@ -244,4 +244,54 @@ export interface MockDb {
   ingressosEmitidos: IngressoEmitido[];
   movimentosEstoque: MovimentoEstoque[];
   patrocinadores: Patrocinador[];
+  despesas: Despesa[];
+  certificados: Certificado[];
+  auditoria: RegistroAuditoria[];
+}
+
+export const CATEGORIAS_DESPESA = ['Materiais', 'Alimentação', 'Transporte', 'Eventos', 'Manutenção', 'Serviços', 'Outros'] as const;
+export type CategoriaDespesa = (typeof CATEGORIAS_DESPESA)[number];
+
+/** Saída de dinheiro lançada à mão pela entidade (entra no histórico de auditoria). */
+export interface Despesa {
+  id: string;
+  entidadeId: string;
+  categoria: CategoriaDespesa;
+  descricao: string;
+  valor: number;
+  data: string;
+  lancadaPor: string;
+}
+
+/** Certificado de horas: o código permite a qualquer pessoa conferir em /validar/certificado. */
+export interface Certificado {
+  id: string;
+  codigo: string;
+  voluntarioId: string;
+  entidadeId: string;
+  horas: number;
+  inicio: string;
+  fim: string;
+  emitidoEm: string;
+  emitidoPor: string;
+}
+
+export type AcaoAuditada =
+  | 'Aprovou cadastro'
+  | 'Desligou voluntário'
+  | 'Reativou voluntário'
+  | 'Lançou horas à mão'
+  | 'Lançou despesa'
+  | 'Emitiu certificados';
+
+/** Quem fez o quê e quando: aparece nas configurações do comitê. */
+export interface RegistroAuditoria {
+  id: string;
+  em: string;
+  autor: string;
+  acao: AcaoAuditada | string;
+  entidadeId: string | null;
+  /** Sobre quem ou o quê, ex.: o nome do voluntário. */
+  alvo: string;
+  detalhe?: string;
 }

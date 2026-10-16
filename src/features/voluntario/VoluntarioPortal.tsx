@@ -7,12 +7,13 @@ import { placeholderRoutes } from '../../components/shared/placeholderRoutes';
 import { VOLUNTARIO_MORE, VOLUNTARIO_TABS } from '../../lib/portals';
 import { AcoesPage } from './AcoesPage';
 import { CarteirinhaPage } from './CarteirinhaPage';
+import { MeusCertificadosPage } from './CertificadosPage';
 import { MeusIngressosPage, MinhasDoacoesPage } from './IngressosDoacoesPages';
 import { OportunidadesPage } from './OportunidadesPage';
 import { VoluntarioHome } from './VoluntarioHome';
 
 /** Telas já construídas; o resto da navegação ainda usa a tela provisória. */
-const PRONTAS = new Set(['', 'oportunidades', 'carteirinha', 'acoes', 'mais', 'ingressos', 'doacoes']);
+const PRONTAS = new Set(['', 'oportunidades', 'carteirinha', 'acoes', 'mais', 'ingressos', 'doacoes', 'certificados']);
 
 export default function VoluntarioPortal() {
   return (
@@ -25,6 +26,7 @@ export default function VoluntarioPortal() {
         <Route path="mais" element={<VoluntarioMais />} />
         <Route path="ingressos" element={<MeusIngressosPage />} />
         <Route path="doacoes" element={<MinhasDoacoesPage />} />
+        <Route path="certificados" element={<MeusCertificadosPage />} />
         {placeholderRoutes([...VOLUNTARIO_TABS, ...VOLUNTARIO_MORE].filter((item) => !PRONTAS.has(item.path)))}
         <Route path="*" element={<NotFound homePath="/app" />} />
       </Route>

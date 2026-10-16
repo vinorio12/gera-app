@@ -1,4 +1,5 @@
 import { commit, delay, getDb } from '../mocks/db';
+import { auditar } from './sessao';
 import { dadosCarteirinha, isoDay, statusDoVoluntario, ultimaAcao, type DadosCarteirinha } from '../lib/carteirinha';
 import type { VolunteerStatus } from '@gera/design-system';
 import type { Entidade, Oportunidade, RegistroHoras, Voluntario } from '../types/domain';
@@ -27,6 +28,8 @@ function resumir(v: Voluntario, entidadeId?: string): VoluntarioResumo {
     ultimaAcao: ultimaAcao(daEntidade),
   };
 }
+
+const nomeDe = (id: string) => getDb().voluntarios.find((v) => v.id === id)?.nome ?? '';
 
 /** Multi-tenant: a entidade só recebe os próprios voluntários. */
 function daEntidade(id: string, entidadeId: string): Voluntario {
@@ -62,6 +65,7 @@ export async function aprovarVoluntario(id: string, entidadeId: string) {
     const v = db.voluntarios.find((x) => x.id === id)!;
     v.aprovadoEm = isoDay(new Date());
   });
+  auditar({ acao: 'Aprovou cadastro', entidadeId, alvo: nomeDe(id) });
 }
 
 export async function desligarVoluntario(id: string, entidadeId: string, motivo: string) {
@@ -71,6 +75,7 @@ export async function desligarVoluntario(id: string, entidadeId: string, motivo:
   commit((db) => {
     db.voluntarios.find((x) => x.id === id)!.desligamento = { em: isoDay(new Date()), motivo: motivo.trim() };
   });
+  auditar({ acao: 'Desligou voluntário', entidadeId, alvo: nomeDe(id), detalhe: motivo.trim() });
 }
 
 export async function reativarVoluntario(id: string, entidadeId: string) {
@@ -79,6 +84,7 @@ export async function reativarVoluntario(id: string, entidadeId: string) {
   commit((db) => {
     db.voluntarios.find((x) => x.id === id)!.desligamento = null;
   });
+  auditar({ acao: 'Reativou voluntário', entidadeId, alvo: nomeDe(id) });
 }
 
 export async function listarEntidades(): Promise<Entidade[]> {

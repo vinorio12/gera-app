@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { Portal } from '@gera/design-system';
+import { definirAtor } from '../services/sessao';
 
 /** Os perfis autenticados são os mesmos quatro portais do design system. */
 export type Role = Portal;
@@ -75,6 +76,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(readStoredSession);
   const [signedOut, setSignedOut] = useState(false);
+  // Os serviços registram quem fez cada ação (auditoria); com a API real, isso vem do token.
+  definirAtor(session?.userName ?? null);
 
   const signIn = useCallback((profile: ProfileKey) => {
     const next = DEMO_PROFILES[profile];

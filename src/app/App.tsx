@@ -13,6 +13,7 @@ import { CadastroPage } from '../features/publico/CadastroPage';
 import { CheckoutPage } from '../features/publico/CheckoutPage';
 import { IngressosPage } from '../features/publico/IngressosPage';
 import { ValidarPage } from '../features/publico/ValidarPage';
+import { ValidarCertificadoPage } from '../features/publico/ValidarCertificadoPage';
 import { CampanhaDetalhePage, CampanhasPage } from '../features/publico/CampanhasPages';
 import { EntidadeDetalhePage, EntidadesPage, ParceirosPage } from '../features/publico/EntidadesParceirosPages';
 import { EventoDetalhePage, EventosPage } from '../features/publico/EventosPages';
@@ -70,6 +71,8 @@ export function App() {
                       <Route path="checkout" element={<CheckoutPage />} />
                       <Route path="cadastro" element={<CadastroPage />} />
                       <Route path="validar" element={<ValidarPage />} />
+                      <Route path="validar/certificado" element={<ValidarCertificadoPage />} />
+                      <Route path="validar/certificado/:codigo" element={<ValidarCertificadoPage />} />
                       <Route path="validar/:token" element={<ValidarPage />} />
                       <Route
                         path="*"

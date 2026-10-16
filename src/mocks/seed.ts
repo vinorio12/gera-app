@@ -6,6 +6,8 @@ import type {
   Area,
   Beneficio,
   Campanha,
+  Certificado,
+  Despesa,
   Entidade,
   Entrada,
   Evento,
@@ -18,11 +20,12 @@ import type {
   Pedido,
   Produto,
   RegistroHoras,
+  RegistroAuditoria,
   Resgate,
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 5;
+export const DB_VERSION = 6;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -478,8 +481,79 @@ export function createSeed(): MockDb {
     }
   });
 
+  // ---------- Etapa 7: empresa dos voluntários, despesas, certificados e auditoria ----------
+  const r3 = mulberry32(7);
+  const int3 = (min: number, max: number) => min + Math.floor(r3() * (max - min + 1));
+  const pick3 = <T,>(list: readonly T[]): T => list[Math.floor(r3() * list.length)]!;
+  const EMPREGADORES = [...EMPRESAS.slice(0, 6), 'Indústria de Motores Exemplo', 'Malharia Fio Bom', 'Cooperativa Agrícola Vale', 'Escritório Contábil Exato'];
+  voluntarios.forEach((v) => {
+    if (v.id === 'v-alex') v.empresa = 'Indústria de Motores Exemplo';
+    else if (v.id !== 'v-bruna' && r3() < 0.55) v.empresa = pick3(EMPREGADORES);
+  });
+
+  const DESPESAS: Record<Despesa['categoria'], Array<[string, number, number]>> = {
+    Materiais: [['Material de oficina', 80, 450], ['Material de limpeza', 60, 220]],
+    Alimentação: [['Lanche dos voluntários', 90, 380], ['Compra de alimentos', 200, 1200]],
+    Transporte: [['Combustível da van', 120, 400], ['Frete de doações', 80, 300]],
+    Eventos: [['Aluguel de som e luz', 400, 1500], ['Decoração do evento', 150, 600]],
+    Manutenção: [['Conserto na sede', 150, 900], ['Pintura e reparos', 300, 1400]],
+    Serviços: [['Conta de luz da sede', 180, 420], ['Internet e telefone', 120, 180], ['Contabilidade', 350, 600]],
+    Outros: [['Taxas bancárias', 20, 60]],
+  };
+  const despesas: Despesa[] = [];
+  ENTIDADES.forEach((e) => {
+    for (let mes = 0; mes < 12; mes++) {
+      for (let n = int3(2, 4); n > 0; n--) {
+        const categoria = pick3(Object.keys(DESPESAS) as Array<Despesa['categoria']>);
+        const [descricao, min, max] = pick3(DESPESAS[categoria]);
+        despesas.push({
+          id: `d-${despesas.length + 1}`, entidadeId: e.id, categoria, descricao, valor: int3(min / 5, max / 5) * 5,
+          data: dataNoMes(mes), lancadaPor: `Equipe ${e.nome}`,
+        });
+      }
+    }
+  });
+
+  const codigo = () => {
+    const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const bloco = () => Array.from({ length: 4 }, () => letras[int3(0, letras.length - 1)]).join('');
+    return `GERA-${bloco()}-${bloco()}`;
+  };
+  const certificados: Certificado[] = [];
+  const certificar = (voluntarioId: string, entidadeId: string, inicio: string, fim: string, emitidoEm: string) => {
+    const h = horas.filter((x) => x.voluntarioId === voluntarioId && x.entidadeId === entidadeId && x.data >= inicio && x.data <= fim).reduce((s, x) => s + x.horas, 0);
+    if (h > 0) {
+      certificados.push({ id: `cert-${certificados.length + 1}`, codigo: codigo(), voluntarioId, entidadeId, horas: h, inicio, fim, emitidoEm, emitidoPor: `Equipe ${ENTIDADES.find((e) => e.id === entidadeId)!.nome}` });
+    }
+  };
+  certificar('v-alex', 'ama-jaragua', '2025-05-01', '2025-12-31', '2026-01-10');
+  certificar('v-alex', 'ama-jaragua', '2026-01-01', '2026-06-30', '2026-07-05');
+  ativos.slice(0, 12).forEach((v) => certificar(v.id, v.entidadeIds[0]!, '2026-01-01', '2026-06-30', '2026-07-05'));
+
+  const auditoria: RegistroAuditoria[] = [];
+  const auditado = (em: string, autor: string, acao: string, entidadeId: string | null, alvo: string, detalhe?: string) =>
+    auditoria.push({ id: `aud-${auditoria.length + 1}`, em, autor, acao, entidadeId, alvo, ...(detalhe ? { detalhe } : {}) });
+  voluntarios
+    .filter((v) => v.aprovadoEm && v.aprovadoEm >= '2026-07-01')
+    .slice(0, 8)
+    .forEach((v) => auditado(`${v.aprovadoEm}T14:00:00.000Z`, `Equipe ${ENTIDADES.find((e) => e.id === v.entidadeIds[0])!.nome}`, 'Aprovou cadastro', v.entidadeIds[0]!, v.nome));
+  voluntarios
+    .filter((v) => v.desligamento)
+    .slice(0, 4)
+    .forEach((v) => auditado(`${v.desligamento!.em}T16:30:00.000Z`, `Equipe ${ENTIDADES.find((e) => e.id === v.entidadeIds[0])!.nome}`, 'Desligou voluntário', v.entidadeIds[0]!, v.nome, v.desligamento!.motivo));
+  horas
+    .filter((h) => h.origem === 'manual' && h.data >= '2026-08-01')
+    .slice(0, 5)
+    .forEach((h) => auditado(`${h.data}T18:00:00.000Z`, `Equipe ${ENTIDADES.find((e) => e.id === h.entidadeId)!.nome}`, 'Lançou horas à mão', h.entidadeId, voluntarios.find((v) => v.id === h.voluntarioId)!.nome, `${h.horas} h: ${h.justificativa ?? 'Leitor de QR indisponível no dia'}`));
+  despesas
+    .filter((d) => d.data >= '2026-09-15')
+    .slice(0, 6)
+    .forEach((d) => auditado(`${d.data}T11:00:00.000Z`, d.lancadaPor, 'Lançou despesa', d.entidadeId, d.descricao, `${d.categoria} · R$ ${d.valor}`));
+  auditoria.sort((a, b) => a.em.localeCompare(b.em));
+
   return {
     versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,
     eventos: [...realizados, ...eventos], produtos, campanhas, entradas, pedidos, ingressosEmitidos, movimentosEstoque, patrocinadores,
+    despesas, certificados, auditoria,
   };
 }

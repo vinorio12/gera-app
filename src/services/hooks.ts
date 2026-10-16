@@ -36,6 +36,9 @@ import {
   obterProdutoGestao,
 } from './gestao';
 import { listarBeneficiosDoParceiro, listarResgates } from './parceiros';
+import { listarCertificadosDaEntidade, listarElegiveis, listarMeusCertificados, validarCertificado } from './certificados';
+import { obterFinanceiro } from './financeiro';
+import { gerarRelatorio, type TipoRelatorio } from './relatorios';
 import { acompanharPedido, listarMeusIngressos, listarMinhasDoacoes } from './pedidos';
 import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
 
@@ -152,6 +155,28 @@ export const usePatrocinadores = (entidadeId: string) =>
   useQuery({ queryKey: ['entidade', entidadeId, 'patrocinadores'], queryFn: () => listarPatrocinadores(entidadeId) });
 export const usePatrocinador = (id: string | undefined, entidadeId: string) =>
   useQuery({ queryKey: ['entidade', entidadeId, 'patrocinador', id], queryFn: () => obterPatrocinador(id!, entidadeId), enabled: !!id });
+
+// ---------- Financeiro, certificados e relatórios ----------
+export const useFinanceiro = (periodo: Periodo, entidadeId?: string) =>
+  useQuery({
+    queryKey: ['financeiro', entidadeId ?? 'todas', periodo],
+    queryFn: () => obterFinanceiro({ periodo, entidadeId }),
+    placeholderData: keepPreviousData,
+  });
+export const useElegiveis = (entidadeId: string, periodo: Periodo) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'elegiveis', periodo], queryFn: () => listarElegiveis({ entidadeId, periodo }), placeholderData: keepPreviousData });
+export const useCertificadosDaEntidade = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'certificados'], queryFn: () => listarCertificadosDaEntidade(entidadeId) });
+export const useMeusCertificados = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'certificados'], queryFn: () => listarMeusCertificados(voluntarioId) });
+export const useValidacaoCertificado = (codigo: string) =>
+  useQuery({ queryKey: ['publico', 'certificado', codigo], queryFn: () => validarCertificado(codigo), enabled: !!codigo });
+export const useRelatorio = (tipo: TipoRelatorio, periodo: Periodo, entidadeId?: string) =>
+  useQuery({
+    queryKey: ['relatorio', tipo, entidadeId ?? 'todas', periodo],
+    queryFn: () => gerarRelatorio({ tipo, periodo, entidadeId }),
+    placeholderData: keepPreviousData,
+  });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e

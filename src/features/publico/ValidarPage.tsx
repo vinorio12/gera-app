@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ValidationResult } from '@gera/design-system';
 import { CodeReader } from '../../components/shared/CodeReader';
 import { PageHeader } from '../../components/shared/PageHeader';
@@ -44,6 +44,12 @@ export function ValidarPage() {
         <InlineError>{validar.isError ? mensagemDeErro(validar.error) : null}</InlineError>
       )}
       <CodeReader onCode={(c) => navigate(`/validar/${encodeURIComponent(c)}`)} busy={validar.isPending} submitLabel="Validar" />
+      <p className="text-sm text-ink-muted">
+        Tem um certificado de horas?{' '}
+        <Link to="/validar/certificado" className="font-semibold text-link hover:underline">
+          Validar certificado
+        </Link>
+      </p>
     </div>
   );
 }
