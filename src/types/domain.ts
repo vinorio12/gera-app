@@ -5,7 +5,7 @@ export type Area = (typeof AREAS)[number];
 
 export type Turno = 'Manhã' | 'Tarde' | 'Noite';
 
-/** Cor de destaque da entidade: sempre um dos tokens de portal, nunca um hex. */
+/** Atalhos de cor de destaque da entidade: tokens de portal. A entidade também pode escolher uma cor livre (`Entidade.corLivre`). */
 export const CORES_DESTAQUE = ['portal-engajar', 'portal-impulsionar', 'portal-conectar', 'portal-ampliar'] as const;
 export type CorDestaque = (typeof CORES_DESTAQUE)[number];
 
@@ -34,6 +34,12 @@ export interface Entidade {
   telefone: string;
   responsavel: string;
   corDestaque: CorDestaque;
+  /** Cor livre escolhida pela entidade (hex, é dado do banco). Vale mais que `corDestaque`. */
+  corLivre?: string;
+  /** Foto de perfil (logo), data URL quadrada de 320 px. */
+  logoUrl?: string;
+  /** Banner da página pública, data URL 16:5 de 1600×500. */
+  bannerUrl?: string;
   equipe: MembroEquipe[];
 }
 
@@ -65,7 +71,7 @@ export interface Voluntario {
   desligamento: { em: string; motivo: string } | null;
   /** Número da carteirinha, ex.: JS-2026-004812. */
   registro: string;
-  /** Foto pequena (data URL) enviada no fim do cadastro. */
+  /** Foto de perfil (data URL quadrada de 320 px), enviada no cadastro ou trocada no Perfil. */
   fotoUrl?: string;
   endereco?: { cep: string; rua: string; numero: string; complemento: string; bairro: string; cidade: string; uf: string };
   profissao?: string;
@@ -177,6 +183,10 @@ export interface Parceiro {
   email: string;
   /** Pessoa de contato na empresa. */
   contato: string;
+  /** Foto de perfil (logo), data URL quadrada de 320 px. */
+  logoUrl?: string;
+  /** Banner da empresa, data URL 16:5 de 1600×500. */
+  bannerUrl?: string;
 }
 
 /** Uso de um benefício registrado pelo parceiro depois de validar a carteirinha. */

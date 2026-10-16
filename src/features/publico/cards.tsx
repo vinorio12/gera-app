@@ -3,8 +3,10 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, Clock, MapPin } from 'lucide-react';
 import { formatHours, formatNumber } from '@gera/design-system';
+import { Avatar } from '../../components/shared/Imagens';
 import { ButtonLink } from '../../components/ui/ButtonLink';
 import { formatDateShort, formatMoeda } from '../../lib/format';
+import { marcaDaEntidade } from '../../lib/marca';
 import type { EntidadePublica, OportunidadePublica, ProdutoPublico } from '../../services/publico';
 
 /** Faixa sem foto: o grafismo de engrenagem sobre o verde da marca. */
@@ -116,10 +118,22 @@ export function OportunidadeCard({ oportunidade: o, previa = false }: { oportuni
 }
 
 export function EntidadeCard({ entidade: e }: { entidade: EntidadePublica }) {
+  const marca = marcaDaEntidade(e);
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-bg-card shadow-card">
-      <FaixaEngrenagem rotulo={e.bairro} className="h-20" />
-      <div className="flex flex-1 flex-col gap-2 p-4">
+    <article style={marca.estilo} className="flex flex-col rounded-lg border border-border bg-bg-card shadow-card">
+      <div className="relative">
+        <div className="overflow-hidden rounded-t-lg">
+          {e.bannerUrl ? (
+            <img src={e.bannerUrl} alt={`Banner: ${e.nome}`} className="aspect-[16/5] w-full object-cover" />
+          ) : (
+            <FaixaEngrenagem rotulo={e.bairro} className="h-20" />
+          )}
+          {/* Cor da entidade: só um detalhe, nunca atrás de texto sem contraste. */}
+          <div aria-hidden className="h-1 bg-[var(--cor-entidade)]" />
+        </div>
+        {e.logoUrl && <Avatar src={e.logoUrl} nome={e.nome} tamanho={48} className="absolute -bottom-6 right-4 border-4 border-bg-card" />}
+      </div>
+      <div className={`flex flex-1 flex-col gap-2 p-4${e.logoUrl ? ' pt-8' : ''}`}>
         <h3 className="text-lg font-bold leading-6 text-ink">
           <Link to={`/entidades/${e.slug}`} className="hover:text-link hover:underline">
             {e.nome}

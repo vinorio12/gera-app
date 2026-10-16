@@ -3,7 +3,10 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { GeraSymbol, PortalVerbo, cx } from '@gera/design-system';
 import { PORTAL_HOME, useAuth, useSession } from '../../lib/auth';
+import { marcaDaEntidade } from '../../lib/marca';
 import type { NavItem } from '../../lib/portals';
+import { useEntidadeConfig } from '../../services/hooks';
+import { Avatar } from '../shared/Imagens';
 import { IconButton } from '../shared/IconButton';
 import { SkipLink } from '../shared/SkipLink';
 import { ThemeToggle } from '../shared/ThemeToggle';
@@ -107,6 +110,20 @@ export function DeskLayout({ portal, nav }: DeskLayoutProps) {
   );
 }
 
+/** Foto de perfil (logo) da entidade no topo do menu, com a faixa da cor dela. Sem logo, não mostra nada. */
+function EntidadeTopo({ collapsed }: { collapsed: boolean }) {
+  const { orgId } = useSession();
+  const entidade = useEntidadeConfig(orgId ?? '');
+  const e = entidade.data;
+  if (!e?.logoUrl) return collapsed ? <GeraSymbol size={36} /> : null;
+  return (
+    <div style={marcaDaEntidade(e).estilo} className={cx('flex flex-col gap-2', !collapsed && 'mb-3')}>
+      <Avatar src={e.logoUrl} nome={e.nome} tamanho={collapsed ? 40 : 56} />
+      {!collapsed && <div aria-hidden className="h-1 w-14 rounded-pill bg-[var(--cor-entidade)]" />}
+    </div>
+  );
+}
+
 function SidebarContent({
   portal,
   nav,
@@ -117,7 +134,8 @@ function SidebarContent({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className={cx('p-3', collapsed && 'flex justify-center py-4')}>
-        {collapsed ? <GeraSymbol size={36} /> : <PortalVerbo portal={portal} subtitle={subtitle} />}
+        {portal === 'entidade' && <EntidadeTopo collapsed={collapsed} />}
+        {collapsed ? portal !== 'entidade' && <GeraSymbol size={36} /> : <PortalVerbo portal={portal} subtitle={subtitle} />}
       </div>
       <nav aria-label="Menu do portal" className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
         <ul className="flex flex-col gap-1">

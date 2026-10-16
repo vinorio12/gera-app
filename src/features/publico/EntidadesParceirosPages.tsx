@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin } from 'lucide-react';
 import { KpiCard, cx, formatHours, formatNumber } from '@gera/design-system';
 import { EmptyState } from '../../components/shared/EmptyState';
+import { Avatar } from '../../components/shared/Imagens';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, Skeleton, SkeletonList } from '../../components/shared/States';
 import { useCampanhas, useEntidadePublica, useEntidadesPublicas, useEventos, useOportunidades, useParceiros } from '../../services/hooks';
 import type { CategoriaBeneficio } from '../../types/domain';
-import { COR_DESTAQUE } from '../../lib/corDestaque';
+import { marcaDaEntidade } from '../../lib/marca';
 import { GradeCampanhas } from './CampanhasPages';
 import { GradeEventos } from './EventosPages';
 import { EntidadeCard, FaixaEngrenagem, OportunidadeCard } from './cards';
@@ -52,10 +53,19 @@ export function EntidadeDetalhePage() {
         <ErrorState error={entidade.error} />
       ) : (
         <div className="flex flex-col gap-8">
-          <div className="overflow-hidden rounded-lg">
-            <FaixaEngrenagem rotulo={entidade.data.areas.join(' · ')} className="h-40" />
-            {/* Cor de destaque escolhida pela entidade (um token de portal). */}
-            <div aria-hidden className={cx('h-2', COR_DESTAQUE[entidade.data.corDestaque].amostra)} />
+          <div className="relative" style={marcaDaEntidade(entidade.data).estilo}>
+            <div className="overflow-hidden rounded-lg">
+              {entidade.data.bannerUrl ? (
+                <img src={entidade.data.bannerUrl} alt={`Banner: ${entidade.data.nome}`} className="aspect-[16/5] max-h-72 w-full object-cover" />
+              ) : (
+                <FaixaEngrenagem rotulo={entidade.data.areas.join(' · ')} className="h-40" />
+              )}
+              {/* Cor da entidade (token ou cor livre): faixa de destaque, nunca atrás de texto. */}
+              <div aria-hidden className="h-2 bg-[var(--cor-entidade)]" />
+            </div>
+            {entidade.data.logoUrl && (
+              <Avatar src={entidade.data.logoUrl} nome={entidade.data.nome} tamanho={88} className="absolute -bottom-8 right-4 border-4 border-bg-page" />
+            )}
           </div>
           <PageHeader title={entidade.data.nome} description={entidade.data.causa} />
           <p className="-mt-6 flex items-center gap-2 text-ink-muted">
@@ -131,20 +141,26 @@ export function ParceirosPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visiveis.map((p) => (
-            <article key={p.id} className="flex flex-col gap-3 rounded-lg border border-border bg-bg-card p-4 shadow-card">
-              <div>
-                <p className="font-display text-base uppercase leading-5 tracking-[0.08em] text-ink-muted">{p.categoria}</p>
-                <h2 className="text-lg font-bold text-ink">{p.nome}</h2>
-                <p className="text-sm text-ink-muted">{p.endereco}</p>
+            <article key={p.id} className="flex flex-col overflow-hidden rounded-lg border border-border bg-bg-card shadow-card">
+              {p.bannerUrl && <img src={p.bannerUrl} alt={`Banner: ${p.nome}`} className="aspect-[16/5] w-full object-cover" />}
+              <div className="flex flex-col gap-3 p-4">
+                <div className="flex items-start gap-3">
+                  {p.logoUrl && <Avatar src={p.logoUrl} nome={p.nome} tamanho={48} />}
+                  <div className="min-w-0">
+                    <p className="font-display text-base uppercase leading-5 tracking-[0.08em] text-ink-muted">{p.categoria}</p>
+                    <h2 className="text-lg font-bold text-ink">{p.nome}</h2>
+                    <p className="text-sm text-ink-muted">{p.endereco}</p>
+                  </div>
+                </div>
+                <ul className="flex flex-col gap-2">
+                  {p.beneficios.map((b) => (
+                    <li key={b.id} className="rounded-md bg-secondary-soft px-3 py-2">
+                      <p className="font-semibold text-on-secondary-soft">{b.titulo}</p>
+                      <p className="text-sm text-ink-muted">{b.regra}</p>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="flex flex-col gap-2">
-                {p.beneficios.map((b) => (
-                  <li key={b.id} className="rounded-md bg-secondary-soft px-3 py-2">
-                    <p className="font-semibold text-on-secondary-soft">{b.titulo}</p>
-                    <p className="text-sm text-ink-muted">{b.regra}</p>
-                  </li>
-                ))}
-              </ul>
             </article>
           ))}
         </div>

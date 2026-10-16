@@ -16,7 +16,8 @@ function* walk(dir) {
   for (const name of readdirSync(dir)) {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) yield* walk(path);
-    else if (/\.(tsx?|css|html)$/.test(name)) yield path;
+    // Testes de unidade usam hex como dado de entrada (contraste, cor livre da entidade).
+    else if (/\.(tsx?|css|html)$/.test(name) && !/\.test\.tsx?$/.test(name)) yield path;
   }
 }
 

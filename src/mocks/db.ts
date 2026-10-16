@@ -25,14 +25,21 @@ export function getDb(): MockDb {
   return db;
 }
 
-/** Aplica uma mudança e salva. */
-export function commit(change: (db: MockDb) => void) {
+const estourouCota = (erro: unknown) =>
+  erro instanceof DOMException && (erro.name === 'QuotaExceededError' || erro.name === 'NS_ERROR_DOM_QUOTA_REACHED' || erro.code === 22 || erro.code === 1014);
+
+/**
+ * Aplica uma mudança e salva. Devolve false só quando o navegador recusou por falta de espaço (cota cheia):
+ * quem grava imagens usa isso para avisar e desfazer. Storage bloqueado de vez conta como salvo (a mudança vale até recarregar).
+ */
+export function commit(change: (db: MockDb) => void): boolean {
   change(db);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  } catch {
-    // sem storage: a mudança vale até recarregar
+  } catch (erro) {
+    return !estourouCota(erro);
   }
+  return true;
 }
 
 /** Volta tudo para os dados de exemplo originais. */

@@ -2,6 +2,7 @@
 // Nenhum nome de pessoa ou empresa real além dos que estão no documento de requisitos.
 import { addDays, addMonths, format, subMonths } from 'date-fns';
 import { cpfFromBase } from '../lib/cpf';
+import { bannerExemplo, logoExemplo } from './imagensExemplo';
 import type {
   Area,
   Beneficio,
@@ -25,7 +26,7 @@ import type {
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 9;
+export const DB_VERSION = 10;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -125,6 +126,13 @@ export function createSeed(): MockDb {
       { id: `${e.id}-m2`, nome: `Equipe ${e.nome}`, email: `equipe@${e.slug}.org.br`, papel: 'Equipe' as const, desde: '2025-04-02', convitePendente: false },
     ],
   }));
+  // Logo e banner de exemplo (SVG gerado com as cores dos tokens) em duas entidades.
+  const ama = entidades.find((e) => e.id === 'ama-jaragua')!;
+  ama.logoUrl = logoExemplo('AMA', 'brand-deep', 'papel', 'primary');
+  ama.bannerUrl = bannerExemplo('brand-deep', 'primary', 'highlight');
+  const itapocu = entidades.find((e) => e.id === 'instituto-itapocu')!;
+  itapocu.logoUrl = logoExemplo('RI', 'portal-conectar', 'tinta', 'brand-deep');
+  itapocu.bannerUrl = bannerExemplo('primary', 'brand-deep', 'secondary');
   const projetosDe = (entidadeId: string) => ENTIDADES.find((e) => e.id === entidadeId)!.projetos;
 
   // ---------- Voluntários: Alex e Bruna fixos, mais 118 com os quatro status ----------
@@ -260,6 +268,13 @@ export function createSeed(): MockDb {
     email: `contato@${id.slice(2)}.exemplo.com.br`,
     contato: 'Gerência da loja',
   }));
+  // Logo e banner de exemplo em dois parceiros.
+  const cafe = parceiros.find((p) => p.id === 'p-cafe')!;
+  cafe.logoUrl = logoExemplo('CE', 'highlight', 'tinta', 'brand-deep');
+  cafe.bannerUrl = bannerExemplo('brand-deep', 'highlight', 'primary');
+  const livrariaParceira = parceiros.find((p) => p.id === 'p-livraria')!;
+  livrariaParceira.logoUrl = logoExemplo('PN', 'primary', 'papel', 'secondary');
+  livrariaParceira.bannerUrl = bannerExemplo('primary', 'secondary', 'brand-deep');
   // Economia estimada por uso (em reais), informada pelo parceiro para o relatório ESG.
   const ECONOMIA: Record<string, number> = {
     '10% em qualquer pedido': 3, 'Café coado grátis no aniversário': 6, '15% em pães e salgados': 2.5, 'Sobremesa grátis no almoço': 9,

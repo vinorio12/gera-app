@@ -1,7 +1,9 @@
-// Configurações da entidade: dados, marca (cor de destaque entre os tokens de portal) e equipe.
+// Configurações da entidade: dados, marca (cor de destaque, foto de perfil e banner) e equipe.
 import { commit, delay, getDb, newId } from '../mocks/db';
 import { isoDay } from '../lib/carteirinha';
+import { normalizarHex } from '../lib/contraste';
 import { CORES_DESTAQUE, type CorDestaque, type Entidade, type MembroEquipe } from '../types/domain';
+import { gravarImagem } from './imagens';
 import { auditar } from './sessao';
 import { ServiceError } from './voluntarios';
 
@@ -43,7 +45,26 @@ export async function definirCorDestaque(entidadeId: string, cor: CorDestaque) {
   await delay(150);
   if (!CORES_DESTAQUE.includes(cor)) throw new ServiceError('Escolha uma das cores da GERA.');
   const e = daEntidade(entidadeId);
-  commit(() => (e.corDestaque = cor));
+  commit(() => {
+    e.corDestaque = cor;
+    delete e.corLivre;
+  });
+}
+
+/** Cor livre da entidade, em hex (#rrggbb). O contraste do texto é calculado na hora de mostrar. */
+export async function definirCorLivre(entidadeId: string, hex: string) {
+  await delay(150);
+  const cor = normalizarHex(hex);
+  if (!cor) throw new ServiceError('Confira a cor: use o formato #RRGGBB (o # e seis números ou letras de A a F).');
+  const e = daEntidade(entidadeId);
+  commit(() => (e.corLivre = cor));
+}
+
+/** Foto de perfil (logo) ou banner da entidade; null remove. */
+export async function salvarImagemEntidade(entidadeId: string, qual: 'logo' | 'banner', dataUrl: string | null) {
+  await delay(200);
+  const e = daEntidade(entidadeId);
+  gravarImagem(e, qual === 'logo' ? 'logoUrl' : 'bannerUrl', dataUrl, qual === 'logo' ? 'foto' : 'banner');
 }
 
 export async function convidarMembro(entidadeId: string, input: { nome: string; email: string; papel: MembroEquipe['papel'] }) {

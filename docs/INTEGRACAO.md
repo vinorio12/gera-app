@@ -41,7 +41,7 @@ Os formatos são os tipos de `src/types/domain.ts` (datas `yyyy-MM-dd` ou ISO co
 | Serviço | Funções | Rota sugerida |
 |---|---|---|
 | `publico.ts` (sem login) | `obterResumoPublico`, `listarOportunidades(filtro)`, `obterOportunidade(id)`, `listarEventos`, `obterEvento(slug)`, `listarCampanhas`, `obterCampanha(slug)`, `listarProdutos`, `obterProduto(slug)`, `obterProdutosPorId(ids)`, `listarEntidadesPublicas`, `obterEntidadePublica(slug)`, `listarParceiros` | `GET /publico/...` (só dados públicos, sem pessoais) |
-| `cadastro.ts` | `buscarCep(cep)`, `cadastrarVoluntario(NovoVoluntario)`, `salvarFoto(id, dataUrl)` | `POST /voluntarios`, `PUT /voluntarios/:id/foto` |
+| `cadastro.ts` | `buscarCep(cep)`, `cadastrarVoluntario(NovoVoluntario)`, `salvarFoto(id, dataUrl \| null)` (null remove) | `POST /voluntarios`, `PUT/DELETE /voluntarios/:id/foto` |
 | `voluntarios.ts` | `listarVoluntariosDaEntidade`, `obterVoluntarioDaEntidade`, `aprovarVoluntario`, `desligarVoluntario(motivo)`, `reativarVoluntario`, `listarEntidades`, `obterMeuPainel`, `listarParaReengajar` | `/entidades/:id/voluntarios/...`, `GET /eu/painel` |
 | `horas.ts` | `listarOportunidadesDaEntidade`, `fazerCheckIn({ codigo })`, `registrarHorasManual`, `obterBancoDeHoras` | `POST /entidades/:id/check-ins`, `POST /entidades/:id/horas` |
 | `oportunidades.ts` | `listarOportunidadesAbertas`, `inscrever`, `cancelarInscricao`, `entrarNaFila`, `sairDaFila` | `POST/DELETE /oportunidades/:id/inscricao`, `/fila` |
@@ -52,11 +52,11 @@ Os formatos são os tipos de `src/types/domain.ts` (datas `yyyy-MM-dd` ou ISO co
 | `relatorios.ts` | `gerarRelatorio({ tipo, periodo, entidadeId? })` → `Documento` | `GET /relatorios/:tipo?...` (o mesmo `Documento` vira prévia, PDF e CSV no cliente) |
 | `indicadores.ts` | `obterPainelAdmin`, `obterPainelEntidade` | `GET /indicadores/...` |
 | `parceiros.ts` | `validarCarteirinha(codigo)`, `listarBeneficiosDoParceiro`, `registrarUso`, `listarResgates` | `POST /parceiros/:id/validacoes`, `/usos` |
-| `beneficios.ts` | `listarBeneficiosAtivos`, `salvarBeneficio`, `excluirBeneficio`, `obterEmpresa`, `salvarEmpresa`, `obterPainelEsg`, `listarParceirosAdmin`, `decidirParceiro`, `decidirBeneficio`, `listarBeneficiosParaVoluntario` | `/parceiros/:id/...`, `/admin/parceiros/...` |
+| `beneficios.ts` | `listarBeneficiosAtivos`, `salvarBeneficio`, `excluirBeneficio`, `obterEmpresa`, `salvarEmpresa`, `salvarImagemEmpresa(id, 'logo' \| 'banner', dataUrl \| null)`, `obterPainelEsg`, `listarParceirosAdmin`, `decidirParceiro`, `decidirBeneficio`, `listarBeneficiosParaVoluntario` | `/parceiros/:id/...`, `/admin/parceiros/...` |
 | `perfil.ts` | `obterMeuPerfil`, `salvarMeuPerfil`, `salvarPreferencias`, `exportarMeusDados` (JSON da LGPD), `pedirExclusao`, `listarPedidosExclusao`, `atenderPedidoExclusao` | `/eu/...`, `/admin/lgpd/...` |
 | `notificacoes.ts` | `listarNotificacoes`, `marcarNotificacoesVistas` | `GET /eu/notificacoes` (o servidor também manda e-mail/WhatsApp conforme as preferências) |
 | `admin.ts` | entidades (`listarEntidadesAdmin`, `cadastrarEntidade`, `aprovarEntidade`), `listarTodosVoluntarios`, `listarEventosAdmin`, `listarCampanhasAdmin`, comitê (`obterComite`, `obterTermoVigente`, `salvarDadosComite`, `publicarTermo`, `adicionarAdmin`, `removerAdmin`), `listarAuditoria` | `/admin/...` |
-| `configuracoes.ts` | `obterEntidadeConfig`, `salvarDadosEntidade`, `definirCorDestaque`, `convidarMembro`, `removerMembro` | `/entidades/:id/config` |
+| `configuracoes.ts` | `obterEntidadeConfig`, `salvarDadosEntidade`, `definirCorDestaque` (atalho da GERA), `definirCorLivre` (hex), `salvarImagemEntidade(id, 'logo' \| 'banner', dataUrl \| null)`, `convidarMembro`, `removerMembro` | `/entidades/:id/config`, `PUT/DELETE /entidades/:id/logo` e `/banner` |
 | `sessao.ts` | `definirAtor`, `auditar` | some: o servidor grava a auditoria a partir do token |
 
 **Multi-tenant:** hoje cada função recebe `entidadeId`/`parceiroId` e confere que o dado é dela. Na API, tire o id do token (a entidade só enxerga a própria) e use o parâmetro só no portal do comitê.
@@ -90,6 +90,9 @@ Os formatos são os tipos de `src/types/domain.ts` (datas `yyyy-MM-dd` ou ISO co
 | LGPD | "Pedir exclusão" só registra o pedido; o comitê marca como atendido. | Exclusão e anonimização no servidor, com prazo legal. |
 | Distância dos parceiros | Valor fixo nos dados. | Calculada pela localização (com permissão). |
 | CEP | ViaCEP com uma lista local de reserva. | Igual, ou serviço próprio. |
+| Fotos, logos e banners | Data URL dentro dos dados (`fotoUrl`, `logoUrl`, `bannerUrl`), já recortada e reduzida no navegador por `src/lib/imagem.ts` (foto quadrada de 320 px, ~60 KB; banner 16:5 de 1600×500, ~250 KB). O `commit()` de `src/mocks/db.ts` devolve false quando o `localStorage` enche e `gravarImagem` desfaz e avisa. | Enviar o arquivo a um storage (S3, GCS...) e guardar só a URL nos dados; a API valida tipo (JPG, PNG, WebP) e tamanho, e pode gerar as versões em vários tamanhos. Mantenha o `alt` com o nome da pessoa, entidade ou empresa. |
+| Cor livre da entidade | `Entidade.corLivre` (hex), escolhida em Configurações › Marca; o contraste do texto é calculado na tela (`src/lib/contraste.ts`). | A API valida o formato `#rrggbb`; o cálculo de contraste pode continuar no cliente. |
+| Downloads | `salvarArquivo` (`src/lib/salvarArquivo.ts`): capacidade `downloads` do claude.ai na página publicada, `<a download>` fora de quadro e a prévia como último recurso. | Só o `<a download>`; ou URLs assinadas do servidor para arquivos grandes. |
 | PDFs e planilhas | Gerados no navegador (jsPDF sob demanda, CSV com BOM e ";"). | Podem continuar no navegador. |
 | Offline | Service worker em `public/sw.js` e a última carteirinha no `localStorage`. | Igual; com a API, o painel salvo vem do servidor. |
 
