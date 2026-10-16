@@ -52,8 +52,8 @@ import { listarBeneficiosAtivos, listarBeneficiosParaVoluntario, listarParceiros
 import { listarPedidosExclusao, obterMeuPerfil } from './perfil';
 import { listarNotificacoes } from './notificacoes';
 import { gerarRelatorio, type TipoRelatorio } from './relatorios';
-import { acompanharPedido, listarMeusIngressos, listarMinhasDoacoes } from './pedidos';
-import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
+import { acompanharPedido, listarMeusIngressos, listarMinhasCompras, listarMinhasDoacoes } from './pedidos';
+import { listarEntidades, listarParaReengajar, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +67,9 @@ export const queryClient = new QueryClient({
 
 export const useVoluntariosDaEntidade = (entidadeId: string) =>
   useQuery({ queryKey: ['entidade', entidadeId, 'voluntarios'], queryFn: () => listarVoluntariosDaEntidade(entidadeId) });
+
+export const useParaReengajar = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'reengajar'], queryFn: () => listarParaReengajar(entidadeId) });
 
 export const useVoluntarioDaEntidade = (id: string, entidadeId: string) =>
   useQuery({ queryKey: ['entidade', entidadeId, 'voluntario', id], queryFn: () => obterVoluntarioDaEntidade(id, entidadeId) });
@@ -140,6 +143,8 @@ export const useAndamentoPedido = (pedidoId: string | null) =>
   });
 export const useMeusIngressos = (voluntarioId: string) =>
   useQuery({ queryKey: ['voluntario', voluntarioId, 'ingressos'], queryFn: () => listarMeusIngressos(voluntarioId) });
+export const useMinhasCompras = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'compras'], queryFn: () => listarMinhasCompras(voluntarioId) });
 export const useMinhasDoacoes = (voluntarioId: string) =>
   useQuery({ queryKey: ['voluntario', voluntarioId, 'doacoes'], queryFn: () => listarMinhasDoacoes(voluntarioId) });
 

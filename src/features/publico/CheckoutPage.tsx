@@ -5,6 +5,7 @@ import { CircleCheck, CreditCard, Lock } from 'lucide-react';
 import { Button, cx } from '@gera/design-system';
 import { CopyField } from '../../components/shared/CopyField';
 import { EmptyState } from '../../components/shared/EmptyState';
+import { ComprovanteDownload } from '../../components/shared/ComprovanteDownload';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { PaymentMethodPicker } from '../../components/shared/PaymentMethodPicker';
 import { ErrorState, InlineError, Skeleton } from '../../components/shared/States';
@@ -402,7 +403,7 @@ function Andamento({ pedidoId, onRecomecar }: { pedidoId: string; onRecomecar: (
   );
 }
 
-function Confirmacao({ andamento: { pedido, ingressos } }: { andamento: NonNullable<ReturnType<typeof useAndamentoPedido>['data']> }) {
+function Confirmacao({ andamento: { pedido, ingressos, entidadeNome, referencia } }: { andamento: NonNullable<ReturnType<typeof useAndamentoPedido>['data']> }) {
   const { limpar } = useCart();
   const carrinhoLimpo = useRef(false);
   // Esvazia o carrinho uma vez só, quando a compra da loja é confirmada.
@@ -468,6 +469,7 @@ function Confirmacao({ andamento: { pedido, ingressos } }: { andamento: NonNulla
       )}
 
       <div className="flex flex-wrap gap-2">
+        {pedido.valor > 0 && <ComprovanteDownload pedido={pedido} contexto={{ entidadeNome, referencia }} />}
         <ButtonLink to="/" variant="secondary">Voltar para o início</ButtonLink>
         {pedido.tipo === 'doacao' && <ButtonLink to="/campanhas" variant="secondary">Ver outras campanhas</ButtonLink>}
       </div>

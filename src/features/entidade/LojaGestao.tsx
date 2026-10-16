@@ -135,7 +135,7 @@ export function LojaGestaoPage() {
             ) : historico.length === 0 ? (
               <EmptyState title="Nenhuma movimentação" description="Entradas, saídas e vendas aparecem aqui com o motivo." />
             ) : (
-              <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card">
+              <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card" tabIndex={0} role="region" aria-label="Histórico de estoque">
                 <table className="w-full min-w-[560px] text-left text-sm">
                   <thead className="border-b border-border text-ink-muted">
                     <tr>

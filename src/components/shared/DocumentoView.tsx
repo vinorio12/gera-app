@@ -25,7 +25,7 @@ export function DocumentoView({ doc, className }: { doc: Documento; className?: 
         <section key={s.titulo} className="flex flex-col gap-2">
           <h3 className="text-lg font-bold">{s.titulo}</h3>
           {s.descricao && <p className="text-sm text-ink-muted">{s.descricao}</p>}
-          <div className="relative overflow-x-auto">
+          <div className="relative overflow-x-auto" tabIndex={0} role="region" aria-label={`Tabela: ${s.titulo}`}>
             <table className="w-full min-w-[420px] text-left text-sm">
               <thead className="bg-bg-subtle text-ink-muted">
                 <tr>

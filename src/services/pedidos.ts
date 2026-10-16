@@ -2,7 +2,7 @@
 // confirma o pagamento e só então o efeito acontece (estoque, campanha, ingressos, entrada no financeiro).
 import { commit, delay, getDb, newId } from '../mocks/db';
 import { isoDay } from '../lib/carteirinha';
-import type { IngressoEmitido, MetodoPagamento, MockDb, Pedido } from '../types/domain';
+import type { Campanha, Evento, IngressoEmitido, MetodoPagamento, MockDb, Pedido } from '../types/domain';
 import { paymentProvider, type Cobranca, type DadosCartao } from './pagamentos';
 import { ServiceError } from './voluntarios';
 
@@ -178,6 +178,18 @@ export interface AndamentoPedido {
   pedido: Pedido;
   cobranca: Cobranca | null;
   ingressos: IngressoEmitido[];
+  /** Para o recibo ou comprovante. */
+  entidadeNome: string;
+  referencia?: string;
+}
+
+/** Nome da entidade e título do evento ou da campanha do pedido. */
+function contexto(p: Pedido) {
+  const db = getDb();
+  return {
+    entidadeNome: db.entidades.find((e) => e.id === p.entidadeId)?.nome ?? '',
+    referencia: p.eventoId ? db.eventos.find((e) => e.id === p.eventoId)?.titulo : p.campanhaId ? db.campanhas.find((c) => c.id === p.campanhaId)?.titulo : undefined,
+  };
 }
 
 /** Consulta o pagamento e, se aprovado, conclui o pedido. A tela chama isso a cada segundo. */
@@ -193,7 +205,7 @@ export async function acompanharPedido(pedidoId: string): Promise<AndamentoPedid
     cobranca = await paymentProvider.consultarStatus(pedido.cobrancaId).catch(() => null);
   }
   const atual = getDb().pedidos.find((p) => p.id === pedidoId)!;
-  return { pedido: { ...atual }, cobranca, ingressos: getDb().ingressosEmitidos.filter((i) => i.pedidoId === pedidoId) };
+  return { pedido: { ...atual }, cobranca, ingressos: getDb().ingressosEmitidos.filter((i) => i.pedidoId === pedidoId), ...contexto(atual) };
 }
 
 // ---------- Visão do voluntário ----------
@@ -203,6 +215,8 @@ export interface MeuIngresso extends IngressoEmitido {
   eventoData: string;
   eventoHorario: string;
   local: string;
+  /** O evento completo, para "Adicionar à agenda" e compartilhar. */
+  evento: Evento & { entidadeNome: string };
 }
 
 export async function listarMeusIngressos(voluntarioId: string): Promise<MeuIngresso[]> {
@@ -213,14 +227,36 @@ export async function listarMeusIngressos(voluntarioId: string): Promise<MeuIngr
     .filter((i) => meus.has(i.pedidoId))
     .map((i) => {
       const e = db.eventos.find((x) => x.id === i.eventoId)!;
-      return { ...i, eventoTitulo: e.titulo, eventoData: e.data, eventoHorario: e.horario, local: e.local };
+      return { ...i, eventoTitulo: e.titulo, eventoData: e.data, eventoHorario: e.horario, local: e.local, evento: { ...e, entidadeNome: db.entidades.find((x) => x.id === e.entidadeId)?.nome ?? '' } };
     })
     .sort((a, b) => a.eventoData.localeCompare(b.eventoData));
 }
 
-export async function listarMinhasDoacoes(voluntarioId: string): Promise<Pedido[]> {
+export interface PedidoComContexto extends Pedido {
+  entidadeNome: string;
+  referencia?: string;
+  /** Campanha da doação, para compartilhar e lembrar o prazo. */
+  campanha?: Campanha & { entidadeNome: string };
+}
+
+export async function listarMinhasDoacoes(voluntarioId: string): Promise<PedidoComContexto[]> {
+  await delay();
+  const db = getDb();
+  return db.pedidos
+    .filter((p) => p.voluntarioId === voluntarioId && p.tipo === 'doacao' && p.status === 'pago')
+    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
+    .map((p) => {
+      const ctx = contexto(p);
+      const c = db.campanhas.find((x) => x.id === p.campanhaId);
+      return { ...p, ...ctx, campanha: c ? { ...c, entidadeNome: ctx.entidadeNome } : undefined };
+    });
+}
+
+/** Pedidos pagos de ingressos e da loja, para os comprovantes. */
+export async function listarMinhasCompras(voluntarioId: string): Promise<PedidoComContexto[]> {
   await delay();
   return getDb()
-    .pedidos.filter((p) => p.voluntarioId === voluntarioId && p.tipo === 'doacao' && p.status === 'pago')
-    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
+    .pedidos.filter((p) => p.voluntarioId === voluntarioId && p.tipo !== 'doacao' && p.status === 'pago')
+    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
+    .map((p) => ({ ...p, ...contexto(p) }));
 }

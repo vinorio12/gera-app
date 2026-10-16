@@ -138,6 +138,8 @@ export interface Oportunidade {
   usaFormacao: boolean;
   /** Encerrada pela entidade: sai do site e não aceita mais inscrições. */
   encerradaEm: string | null;
+  /** Lista de espera, na ordem de chegada: quando alguém cancela, o primeiro entra. */
+  espera: string[];
 }
 
 export type CategoriaBeneficio = 'Alimentação' | 'Saúde' | 'Educação';

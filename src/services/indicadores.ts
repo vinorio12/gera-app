@@ -171,6 +171,8 @@ export interface PainelEntidade {
     /** Inscritos em ações de hoje que ainda não fizeram check-in. */
     checkInsDeHoje: number;
     estoqueBaixo: Produto[];
+    /** Ativos sem ação há 5 meses ou mais. */
+    paraReengajar: number;
   };
 }
 
@@ -203,6 +205,11 @@ export async function obterPainelEntidade(input: { entidadeId: string; periodo: 
         0,
       ),
       estoqueBaixo: daEntidade(db.produtos, input.entidadeId).filter((p) => p.estoque <= 3),
+      paraReengajar: voluntarios.filter((v) => {
+        const regs = db.horas.filter((h) => h.voluntarioId === v.id);
+        const ultima = regs.reduce<string | null>((m, h) => (!m || h.data > m ? h.data : m), null);
+        return statusDoVoluntario(v, regs) === 'ativo' && !!ultima && ultima <= isoDay(subMonths(new Date(), 5));
+      }).length,
     },
   };
 }

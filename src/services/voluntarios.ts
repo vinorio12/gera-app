@@ -1,6 +1,7 @@
 import { commit, delay, getDb } from '../mocks/db';
 import { auditar } from './sessao';
-import { dadosCarteirinha, isoDay, statusDoVoluntario, ultimaAcao, type DadosCarteirinha } from '../lib/carteirinha';
+import { differenceInCalendarDays, subMonths } from 'date-fns';
+import { dadosCarteirinha, isoDay, parseDate, statusDoVoluntario, ultimaAcao, type DadosCarteirinha } from '../lib/carteirinha';
 import type { VolunteerStatus } from '@gera/design-system';
 import type { Entidade, Oportunidade, RegistroHoras, Voluntario } from '../types/domain';
 
@@ -124,4 +125,40 @@ export async function obterMeuPainel(voluntarioId: string): Promise<MeuPainel> {
     proximas: futuras.filter((o) => o.inscritos.includes(v.id)),
     sugestoes: futuras.filter((o) => !o.inscritos.includes(v.id) && v.areas.includes(o.area)).slice(0, 3),
   };
+}
+
+// ---------- Reengajamento ----------
+
+export interface ParaReengajar {
+  voluntario: Voluntario;
+  ultimaAcao: string;
+  /** Dias desde a última ação (entre ~150 e 182: ainda ativo, perto de ficar inativo). */
+  dias: number;
+  mensagem: string;
+}
+
+/** Ativos sem ação há 5 meses ou mais: se não voltarem logo, a carteirinha fica inativa. */
+export async function listarParaReengajar(entidadeId: string): Promise<ParaReengajar[]> {
+  await delay();
+  const db = getDb();
+  const entidade = db.entidades.find((e) => e.id === entidadeId)?.nome ?? 'a entidade';
+  const limite = isoDay(subMonths(new Date(), 5));
+  const proximas = db.oportunidades
+    .filter((o) => o.entidadeId === entidadeId && o.data >= isoDay(new Date()) && !o.encerradaEm && o.inscritos.length < o.vagas)
+    .sort((a, b) => a.data.localeCompare(b.data));
+  return db.voluntarios
+    .filter((v) => v.entidadeIds.includes(entidadeId))
+    .map((v) => ({ v, regs: registrosDe(v.id) }))
+    .filter(({ v, regs }) => statusDoVoluntario(v, regs) === 'ativo' && (ultimaAcao(regs) ?? '9999') <= limite)
+    .map(({ v, regs }) => {
+      const ultima = ultimaAcao(regs)!;
+      const dica = proximas[0] ? ` Que tal ${proximas[0].titulo}, dia ${proximas[0].data.split('-').reverse().slice(0, 2).join('/')}?` : '';
+      return {
+        voluntario: v,
+        ultimaAcao: ultima,
+        dias: differenceInCalendarDays(new Date(), parseDate(ultima)),
+        mensagem: `Oi, ${v.nome.split(' ')[0]}! Aqui é da ${entidade}. Faz um tempinho que você não aparece e a gente sente sua falta.${dica} Uma ação até o mês que vem mantém sua carteirinha GERA ativa, com os benefícios dos parceiros.`,
+      };
+    })
+    .sort((a, b) => b.dias - a.dias);
 }

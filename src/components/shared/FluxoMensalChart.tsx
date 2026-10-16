@@ -42,7 +42,7 @@ export function FluxoMensalChart({ dados }: { dados: Array<{ mes: string; entrad
       </div>
       <details className="text-sm">
         <summary className="cursor-pointer font-semibold text-link">Ver como tabela</summary>
-        <div className="relative overflow-x-auto">
+        <div className="relative overflow-x-auto" tabIndex={0} role="region" aria-label="Entradas e despesas por mês, em tabela">
           <table className="mt-2 w-full min-w-[320px] max-w-lg text-left">
             <thead className="text-ink-muted">
               <tr>

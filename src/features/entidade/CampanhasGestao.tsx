@@ -74,7 +74,7 @@ export function CampanhasGestaoPage() {
                     ctaLabel="Ver doações"
                     onSupport={() => navigate(c.id)}
                   />
-                  <ButtonLink to={`${c.id}/editar`} variant="ghost" className="self-start" aria-label={`Editar ${c.titulo}`}>
+                  <ButtonLink to={`${c.id}/editar`} variant="ghost" className="self-start" aria-label={`Editar campanha: ${c.titulo}`}>
                     <Pencil size={16} aria-hidden /> Editar campanha
                   </ButtonLink>
                 </li>
@@ -132,7 +132,7 @@ export function CampanhaDoacoesPage() {
           {doacoes.length === 0 ? (
             <EmptyState title="Nenhuma doação ainda" description="Compartilhe a página da campanha: as doações aparecem aqui assim que o pagamento é aprovado." className="shadow-none" />
           ) : (
-            <div className="max-h-[560px] overflow-y-auto">
+            <div className="max-h-[560px] overflow-y-auto" tabIndex={0} role="region" aria-label="Lista de doações">
               <table className="w-full text-left text-sm">
                 <thead className="sticky top-0 bg-bg-card text-ink-muted">
                   <tr>

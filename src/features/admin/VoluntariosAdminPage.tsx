@@ -92,7 +92,7 @@ export function VoluntariosAdminPage() {
             <EmptyState title="Ninguém com esses filtros" description="Troque o status, a entidade ou a busca." />
           ) : (
             <>
-              <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card">
+              <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card" tabIndex={0} role="region" aria-label="Tabela de voluntários">
                 <table className="w-full min-w-[760px] text-left text-sm">
                   <thead className="border-b border-border text-ink-muted">
                     <tr>

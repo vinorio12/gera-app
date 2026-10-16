@@ -242,7 +242,7 @@ function Auditoria() {
         <EmptyState title="Nada registrado com esse filtro" />
       ) : (
         <>
-          <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card">
+          <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card" tabIndex={0} role="region" aria-label="Histórico de auditoria">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-border text-ink-muted">
                 <tr>

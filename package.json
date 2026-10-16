@@ -9,7 +9,11 @@
     "typecheck": "tsc -b",
     "preview": "vite preview",
     "check:tokens": "node scripts/check-tokens.mjs",
-    "build:static": "node scripts/check-tokens.mjs && tsc -b && vite build --mode static --base ./ --outDir dist-static && node scripts/artifact-page.mjs"
+    "build:static": "node scripts/check-tokens.mjs && tsc -b && vite build --mode static --base ./ --outDir dist-static && node scripts/artifact-page.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "icones": "node scripts/gerar-icones.mjs"
   },
   "dependencies": {
     "@gera/design-system": "file:./packages/gera-ds",
@@ -29,6 +33,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
     "@types/node": "^22.10.0",
     "@types/qrcode": "^1.5.6",
@@ -36,9 +41,11 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "jsdom": "^26.1.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.6.3",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vitest": "^3.2.7"
   }
 }

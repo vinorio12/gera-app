@@ -135,7 +135,7 @@ function ItemBeneficio({ b }: { b: Beneficio }) {
         </p>
       )}
       <div className="flex flex-wrap gap-2">
-        <ButtonLink to={`${b.id}/editar`} variant="secondary" aria-label={`Editar ${b.titulo}`}>
+        <ButtonLink to={`${b.id}/editar`} variant="secondary" aria-label={`${b.status === 'recusado' ? 'Ajustar e reenviar' : 'Editar'}: ${b.titulo}`}>
           <Pencil size={16} aria-hidden /> {b.status === 'recusado' ? 'Ajustar e reenviar' : 'Editar'}
         </ButtonLink>
         <Button variant="ghost" onClick={() => setExcluindo(true)} aria-label={`Excluir ${b.titulo}`}>

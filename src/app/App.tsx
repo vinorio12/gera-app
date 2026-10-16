@@ -3,6 +3,7 @@ import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LucideProvider } from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { PublicLayout } from '../components/layout/PublicLayout';
+import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 import { NotFound } from '../components/shared/NotFound';
 import { PageLoader } from '../components/shared/PageLoader';
 import { RequireRole } from '../components/shared/RequireRole';
@@ -34,11 +35,15 @@ const ParceiroPortal = lazy(() => import('../features/parceiro/ParceiroPortal'))
 // então guarda a rota em memória. O app de verdade usa as URLs do navegador.
 const Router = import.meta.env.VITE_ROUTER === 'memory' ? MemoryRouter : BrowserRouter;
 
+const ONDE: Record<Role, string> = { admin: 'portal do comitê', entidade: 'portal da entidade', voluntario: 'app do voluntário', parceiro: 'app do parceiro' };
+
 function Portal({ role, children }: { role: Role; children: ReactNode }) {
   return (
-    <RequireRole role={role}>
-      <Suspense fallback={<PageLoader fullScreen />}>{children}</Suspense>
-    </RequireRole>
+    <ErrorBoundary onde={ONDE[role]}>
+      <RequireRole role={role}>
+        <Suspense fallback={<PageLoader fullScreen />}>{children}</Suspense>
+      </RequireRole>
+    </ErrorBoundary>
   );
 }
 

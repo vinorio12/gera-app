@@ -119,7 +119,7 @@ function ItemEntidade({ e }: { e: EntidadeAdmin }) {
               verComoEntidade({ id: e.id, nome: e.nome });
               navigate('/entidade');
             }}
-            aria-label={`Ver como ${e.nome}`}
+            aria-label={`Ver como entidade: ${e.nome}`}
           >
             <Eye size={16} aria-hidden /> Ver como entidade
           </Button>

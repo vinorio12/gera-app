@@ -107,7 +107,7 @@ export function PainelFinanceiro({ entidadeId, titulo, mostrarVendas = false }: 
           {!entidadeId && fin.data.porEntidade.length > 1 && (
             <section className={cardClass} aria-labelledby="por-entidade">
               <h2 id="por-entidade" className="mb-3 text-lg font-bold text-ink">Por entidade</h2>
-              <div className="relative overflow-x-auto">
+              <div className="relative overflow-x-auto" tabIndex={0} role="region" aria-label="Financeiro por entidade">
                 <table className="w-full min-w-[520px] text-left text-sm">
                   <thead className="text-ink-muted">
                     <tr>

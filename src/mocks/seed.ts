@@ -25,7 +25,7 @@ import type {
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 8;
+export const DB_VERSION = 9;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -223,7 +223,7 @@ export function createSeed(): MockDb {
     {
       id: 'o-evento-beneficente', entidadeId: 'ama-jaragua', titulo: 'Evento Beneficente', area: 'Assistência social',
       descricao: 'Recepção, oficinas e apoio na cozinha do evento anual da AMA.', data: iso(SEED_TODAY), turno: 'Tarde', horas: 6,
-      local: 'Sede da AMA Jaraguá, Vila Nova', vagas: 20, inscritos: ['v-alex', 'v-bruna'], usaFormacao: false, encerradaEm: null,
+      local: 'Sede da AMA Jaraguá, Vila Nova', vagas: 20, inscritos: ['v-alex', 'v-bruna'], usaFormacao: false, encerradaEm: null, espera: [],
     },
   ];
   const turnos = ['Manhã', 'Tarde', 'Noite'] as const;
@@ -235,7 +235,7 @@ export function createSeed(): MockDb {
         descricao: `${projeto} com a equipe da ${e.nome}. Não precisa de experiência: a gente explica tudo no dia.`,
         data, turno: turnos[(ei + pi) % 3]!, horas: pick([3, 4, 4, 6]), local: `${e.nome}, ${e.bairro}`,
         vagas: int(6, 25), inscritos: sample(ativos.filter((v) => v.entidadeIds.includes(e.id)).map((v) => v.id), int(1, 5)),
-        usaFormacao: pi === 0 && ['Saúde', 'Educação'].includes(e.areas[0]!), encerradaEm: null,
+        usaFormacao: pi === 0 && ['Saúde', 'Educação'].includes(e.areas[0]!), encerradaEm: null, espera: [],
       });
     });
   });
@@ -420,7 +420,7 @@ export function createSeed(): MockDb {
         data: iso(addDays(SEED_TODAY, -(12 + pi * 23))), turno: turnos[pi % 3]!, horas: pick2([3, 4, 6]),
         local: `${e.nome}, ${e.bairro}`, vagas,
         inscritos: daEntidade.filter(() => r2() < 0.5).slice(0, vagas),
-        usaFormacao: false, encerradaEm: iso(addDays(SEED_TODAY, -(11 + pi * 23))),
+        usaFormacao: false, encerradaEm: iso(addDays(SEED_TODAY, -(11 + pi * 23))), espera: [],
       });
     });
   });
@@ -645,6 +645,27 @@ export function createSeed(): MockDb {
     disponibilidade: ['Sábado · Manhã', 'Sábado · Tarde', 'Quarta · Noite'], profissao: 'Engenheiro eletricista', usaFormacao: false,
   });
   Object.assign(voluntarios.find((v) => v.id === 'v-bruna')!, { disponibilidade: ['Sábado · Manhã', 'Domingo · Tarde'], profissao: 'Psicóloga' });
+
+  // ---------- Etapa 10: uma ação lotada da AMA, com lista de espera ----------
+  const lotada = oportunidades.find((o) => o.id === 'o-ama-jaragua-1')!;
+  const daAma = ativos.filter((v) => v.entidadeIds.includes('ama-jaragua')).map((v) => v.id);
+  lotada.vagas = Math.max(3, lotada.inscritos.length);
+  lotada.inscritos = [...new Set([...lotada.inscritos, ...daAma])].filter((id) => id !== 'v-alex').slice(0, lotada.vagas);
+  lotada.vagas = lotada.inscritos.length;
+  lotada.espera = daAma.filter((id) => !lotada.inscritos.includes(id)).slice(0, 1);
+
+  // Três voluntários da AMA ainda ativos, mas sem ação há uns 5 meses (lista "Para reengajar").
+  daAma
+    .filter((id) => !lotada.inscritos.includes(id) && !lotada.espera.includes(id) && !certificados.some((c) => c.voluntarioId === id))
+    .slice(-3)
+    .forEach((id, i) => {
+      const limite = iso(subMonths(SEED_TODAY, 5));
+      for (let k = horas.length - 1; k >= 0; k--) if (horas[k]!.voluntarioId === id && horas[k]!.data > limite) horas.splice(k, 1);
+      horas.push({ id: `h-reengajar-${i}`, voluntarioId: id, entidadeId: 'ama-jaragua', oportunidadeId: null, data: iso(addDays(SEED_TODAY, -(158 + i * 6))), projeto: 'Apoio às famílias', horas: 4, origem: 'qr' });
+      oportunidades.forEach((o) => {
+        if (o.data >= iso(SEED_TODAY)) o.inscritos = o.inscritos.filter((x) => x !== id);
+      });
+    });
 
   return {
     versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,

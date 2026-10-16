@@ -1,6 +1,7 @@
 import { KpiCard, formatHours } from '@gera/design-system';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { HoursTimeline } from '../../components/shared/HoursTimeline';
+import { MarcosDeHoras } from '../../components/shared/MarcosDeHoras';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, SkeletonList } from '../../components/shared/States';
 import { ButtonLink } from '../../components/ui/ButtonLink';
@@ -34,6 +35,7 @@ export function AcoesPage() {
             <KpiCard className="min-w-0 p-4" label="No mês" value={formatHours(painel.data.horasNoMes)} source="banco de horas" />
             <KpiCard className="min-w-0 p-4" label="No ano" value={formatHours(painel.data.horasNoAno)} source="banco de horas" />
           </div>
+          <MarcosDeHoras totalHoras={painel.data.carteirinha.totalHoras} />
           <p className="text-sm text-ink-muted">
             Ao todo, <strong className="text-ink">{formatHours(painel.data.carteirinha.totalHoras)}</strong> geradas desde o seu cadastro.
           </p>

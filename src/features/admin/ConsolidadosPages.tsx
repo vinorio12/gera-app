@@ -70,7 +70,7 @@ export function EventosAdminPage() {
           <p className="text-sm text-ink-muted">
             {formatNumber(visiveis.length)} eventos · {formatNumber(vendidos)} ingressos vendidos · {formatBRL(receita)} em ingressos
           </p>
-          <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card">
+          <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card" tabIndex={0} role="region" aria-label="Tabela de eventos">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-border text-ink-muted">
                 <tr>

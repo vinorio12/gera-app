@@ -102,8 +102,13 @@ export function OportunidadeCard({ oportunidade: o, previa = false }: { oportuni
           Quero participar
         </span>
       ) : (
-        <ButtonLink to={`/oportunidades/${o.id}`} className="mt-auto justify-center" aria-label={`Quero participar: ${o.titulo}`}>
-          Quero participar
+        <ButtonLink
+          to={`/oportunidades/${o.id}`}
+          variant={restantes > 0 ? 'primary' : 'secondary'}
+          className="mt-auto justify-center"
+          aria-label={`${restantes > 0 ? 'Quero participar' : 'Entrar na lista de espera'}: ${o.titulo}`}
+        >
+          {restantes > 0 ? 'Quero participar' : 'Entrar na lista de espera'}
         </ButtonLink>
       )}
     </article>

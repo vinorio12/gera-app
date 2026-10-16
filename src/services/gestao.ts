@@ -17,6 +17,7 @@ import type {
   TipoIngresso,
   Turno,
 } from '../types/domain';
+import { andarFila } from './oportunidades';
 import { ServiceError } from './voluntarios';
 
 const hoje = () => isoDay(new Date());
@@ -79,11 +80,15 @@ export async function salvarOportunidade(input: DadosOportunidade & { entidadeId
   if (id) {
     const atual = daEntidade(getDb().oportunidades, id, entidadeId, 'Oportunidade');
     validarOportunidade(limpo, false, atual.inscritos.length);
-    commit(() => Object.assign(atual, limpo));
+    commit((db) => {
+      Object.assign(atual, limpo);
+      // Mais vagas: a lista de espera anda.
+      andarFila(db, atual);
+    });
     return { ...atual };
   }
   validarOportunidade(limpo, true);
-  const nova: Oportunidade = { id: newId('o'), entidadeId, ...limpo, inscritos: [], encerradaEm: null };
+  const nova: Oportunidade = { id: newId('o'), entidadeId, ...limpo, inscritos: [], encerradaEm: null, espera: [] };
   commit((db) => db.oportunidades.push(nova));
   return nova;
 }

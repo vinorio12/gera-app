@@ -10,6 +10,8 @@ import { formatDateShort, formatMoeda } from '../../lib/format';
 import { useEventos, useEvento } from '../../services/hooks';
 import type { EventoPublico } from '../../services/publico';
 import { FaixaEngrenagem } from './cards';
+import { AgendaCompartilhar, urlPublica } from '../../components/shared/AgendaCompartilhar';
+import { agendaDoEvento, textoCompartilharEvento } from '../../lib/agenda';
 
 /** Grade de EventCard (design system); os links internos dele navegam pelo router. */
 export function GradeEventos({ eventos }: { eventos: EventoPublico[] }) {
@@ -83,6 +85,11 @@ export function EventoDetalhePage() {
                     Ver no mapa (abre em outra aba)
                   </a>
                   <p className="text-sm text-ink-muted">Organização: {e.entidadeNome}</p>
+                  <AgendaCompartilhar
+                    className="border-t border-border pt-3"
+                    agenda={agendaDoEvento(e, urlPublica(`/eventos/${e.slug}`))}
+                    textoWhatsApp={textoCompartilharEvento(e, urlPublica(`/eventos/${e.slug}`))}
+                  />
                 </section>
                 <section aria-labelledby="ingressos" className="flex flex-col gap-3 rounded-lg border border-border bg-bg-card p-5 shadow-card">
                   <h2 id="ingressos" className="text-lg font-bold text-ink">Ingressos</h2>

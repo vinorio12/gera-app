@@ -11,6 +11,8 @@ import { formatDate } from '../../lib/format';
 import { useCampanha, useCampanhas } from '../../services/hooks';
 import type { CampanhaPublica } from '../../services/publico';
 import { FaixaEngrenagem } from './cards';
+import { AgendaCompartilhar, urlPublica } from '../../components/shared/AgendaCompartilhar';
+import { agendaDaCampanha, textoCompartilharCampanha } from '../../lib/agenda';
 
 /** Grade de CampaignProgress (design system): barra em cremalheira com a engrenagem na ponta. */
 export function GradeCampanhas({ campanhas }: { campanhas: CampanhaPublica[] }) {
@@ -98,6 +100,10 @@ export function CampanhaDetalhePage() {
                       <dd className="font-display text-2xl tabular-nums text-ink sm:text-3xl">{formatDate(c.terminaEm).slice(0, 5)}</dd>
                     </div>
                   </dl>
+                  <AgendaCompartilhar
+                    agenda={agendaDaCampanha(c, urlPublica(`/campanhas/${c.slug}`))}
+                    textoWhatsApp={textoCompartilharCampanha(c, urlPublica(`/campanhas/${c.slug}`))}
+                  />
                 </div>
                 <div className="flex flex-col gap-4">
                   {/* O botão do CampaignProgress leva ao formulário de apoio logo abaixo. */}

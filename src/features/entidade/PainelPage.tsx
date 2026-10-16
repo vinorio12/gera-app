@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Award, CalendarPlus, ChevronRight, HandHeart, Handshake, PackagePlus, ScanLine, UserRoundCheck, Boxes } from 'lucide-react';
+import { Award, CalendarPlus, ChevronRight, HandHeart, Handshake, HeartPulse, PackagePlus, ScanLine, UserRoundCheck, Boxes } from 'lucide-react';
 import { KpiCard, PortalVerbo, formatBRL, formatHours, formatNumber } from '@gera/design-system';
 import { FiltroPeriodo, usePeriodo } from '../../components/shared/FiltroPeriodo';
 import { HorasPorMesChart } from '../../components/shared/HorasPorMesChart';
@@ -80,10 +80,11 @@ export function PainelPage() {
   );
 }
 
-function Pendencias({ aprovacoes, checkInsDeHoje, estoqueBaixo }: { aprovacoes: number; checkInsDeHoje: number; estoqueBaixo: Array<{ id: string; nome: string; estoque: number }> }) {
+function Pendencias({ aprovacoes, checkInsDeHoje, estoqueBaixo, paraReengajar }: { aprovacoes: number; checkInsDeHoje: number; estoqueBaixo: Array<{ id: string; nome: string; estoque: number }>; paraReengajar: number }) {
   const itens = [
     aprovacoes > 0 && { to: 'voluntarios', icon: UserRoundCheck, texto: aprovacoes === 1 ? '1 cadastro aguardando aprovação' : `${aprovacoes} cadastros aguardando aprovação` },
     checkInsDeHoje > 0 && { to: 'horas', icon: ScanLine, texto: checkInsDeHoje === 1 ? '1 check-in para validar hoje' : `${checkInsDeHoje} check-ins para validar hoje` },
+    paraReengajar > 0 && { to: 'voluntarios#reengajar', icon: HeartPulse, texto: paraReengajar === 1 ? '1 voluntário para reengajar' : `${paraReengajar} voluntários para reengajar` },
     ...estoqueBaixo.map((p) => ({ to: 'loja', icon: Boxes, texto: `${p.nome}: ${p.estoque === 0 ? 'esgotado' : `últimas ${p.estoque} unidades`}` })),
   ].filter((x): x is { to: string; icon: typeof Boxes; texto: string } => !!x);
 

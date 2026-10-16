@@ -116,7 +116,7 @@ function ItemOportunidade({ o, passada }: { o: OportunidadeGestao; passada: bool
           <Users size={16} aria-hidden className="text-link" />
           {passada
             ? `${o.presentes} de ${o.inscritos.length} inscritos fizeram check-in`
-            : `${o.inscritos.length} de ${o.vagas} vagas preenchidas`}
+            : `${o.inscritos.length} de ${o.vagas} vagas preenchidas${o.espera.length ? ` · ${o.espera.length} na lista de espera` : ''}`}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-2">
@@ -350,6 +350,7 @@ function OportunidadeForm({ id, inicial, orgName, inscritos }: { id?: string; in
                   inscritos: Array.from({ length: inscritos }, (_, i) => String(i)),
                   usaFormacao: v.usaFormacao,
                   encerradaEm: null,
+                  espera: [],
                 }}
               />
             </div>
