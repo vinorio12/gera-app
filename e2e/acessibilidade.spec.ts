@@ -9,7 +9,7 @@ const ROTAS: Array<{ perfil?: Perfil; rotas: string[] }> = [
     rotas: [
       '/', '/entrar', '/oportunidades', '/oportunidades/o-ama-jaragua-0', '/oportunidades/o-ama-jaragua-1', '/eventos', '/eventos/jantar-beneficente-da-ama',
       '/eventos/jantar-beneficente-da-ama/ingressos', '/campanhas', '/campanhas/reforma-da-sede', '/loja', '/loja/camiseta-gera', '/carrinho',
-      '/entidades', '/entidades/ama-jaragua', '/parceiros', '/cadastro', '/validar', '/validar/JS-2026-004812', '/validar/certificado',
+      '/entidades', '/entidades/ama-jaragua', '/entidades/instituto-itapocu', '/parceiros', '/cadastro', '/validar', '/validar/JS-2026-004812', '/validar/certificado',
       '/checkout?campanha=reforma-da-sede&valor=50', '/rota-que-nao-existe',
     ],
   },
