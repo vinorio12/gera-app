@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { Portal } from '@gera/design-system';
+import { definirAtor } from '../services/sessao';
 
 /** Os perfis autenticados são os mesmos quatro portais do design system. */
 export type Role = Portal;
@@ -17,7 +18,19 @@ export interface Session {
   /** Entidade ou empresa do usuário (multi-tenant): Entidade e Parceiro só enxergam a própria. */
   orgId?: string;
   orgName?: string;
+  /** Administrador vendo o portal de uma entidade ("ver como entidade"). */
+  verComo?: boolean;
 }
+
+/** Sessão do administrador dentro do portal de uma entidade. */
+const sessaoVerComo = (entidade: { id: string; nome: string }): Session => ({
+  profile: 'admin',
+  role: 'entidade',
+  userName: DEMO_PROFILES.admin.userName,
+  orgId: entidade.id,
+  orgName: entidade.nome,
+  verComo: true,
+});
 
 export const DEMO_PROFILES: Record<ProfileKey, Session> = {
   admin: { profile: 'admin', role: 'admin', userName: 'Comitê Social ACIJS' },
@@ -55,7 +68,8 @@ function readStoredSession(): Session | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const profile = (JSON.parse(raw) as { profile?: string }).profile;
+    const { profile, verComo } = JSON.parse(raw) as { profile?: string; verComo?: { id: string; nome: string } };
+    if (profile === 'admin' && verComo?.id) return sessaoVerComo(verComo);
     return profile && profile in DEMO_PROFILES ? DEMO_PROFILES[profile as ProfileKey] : null;
   } catch {
     return null;
@@ -68,6 +82,8 @@ interface AuthContextValue {
   signedOut: boolean;
   signIn: (profile: ProfileKey) => Session;
   signOut: () => void;
+  /** Só para o administrador: abre o portal da entidade com a faixa "Você está vendo como". */
+  verComoEntidade: (entidade: { id: string; nome: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -75,6 +91,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(readStoredSession);
   const [signedOut, setSignedOut] = useState(false);
+  // Os serviços registram quem fez cada ação (auditoria); com a API real, isso vem do token.
+  definirAtor(session ? (session.verComo ? `${session.userName} (vendo como ${session.orgName})` : session.userName) : null);
 
   const signIn = useCallback((profile: ProfileKey) => {
     const next = DEMO_PROFILES[profile];
@@ -98,7 +116,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const value = useMemo(() => ({ session, signedOut, signIn, signOut }), [session, signedOut, signIn, signOut]);
+  const verComoEntidade = useCallback((entidade: { id: string; nome: string }) => {
+    setSession(sessaoVerComo(entidade));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ profile: 'admin', verComo: entidade }));
+    } catch {
+      // idem
+    }
+  }, []);
+
+  const value = useMemo(() => ({ session, signedOut, signIn, signOut, verComoEntidade }), [session, signedOut, signIn, signOut, verComoEntidade]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

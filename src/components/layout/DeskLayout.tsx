@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { GeraSymbol, PortalVerbo, cx } from '@gera/design-system';
 import { PORTAL_HOME, useAuth, useSession } from '../../lib/auth';
@@ -16,8 +16,10 @@ interface DeskLayoutProps {
 /** Portais de computador (Administrador e Entidade): barra lateral recolhível, gaveta no celular. */
 export function DeskLayout({ portal, nav }: DeskLayoutProps) {
   const session = useSession();
-  const { signOut } = useAuth();
+  const { signOut, signIn } = useAuth();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
+  const verComo = !!session.verComo;
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -31,57 +33,75 @@ export function DeskLayout({ portal, nav }: DeskLayoutProps) {
   }, [drawerOpen]);
 
   return (
-    <div className="min-h-screen bg-bg-page lg:flex">
+    <div className="min-h-screen bg-bg-page">
       <SkipLink />
-
-      <aside
-        className={cx(
-          'sticky top-0 hidden h-screen shrink-0 flex-col border-r border-border bg-bg-card lg:flex',
-          collapsed ? 'w-[76px]' : 'w-[264px]',
-        )}
-      >
-        <SidebarContent portal={portal} nav={nav} subtitle={session.orgName} collapsed={collapsed} />
-        <div className={cx('border-t border-border p-3', collapsed && 'flex justify-center')}>
-          <IconButton
-            icon={collapsed ? PanelLeftOpen : PanelLeftClose}
-            label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-            aria-expanded={!collapsed}
-            onClick={() => setCollapsed((c) => !c)}
-          />
-        </div>
-      </aside>
-
-      {drawerOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="absolute inset-0 bg-ink opacity-40" onClick={() => setDrawerOpen(false)} aria-hidden />
-          <div className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-bg-card shadow-raised">
-            <div className="flex justify-end p-2">
-              <IconButton icon={X} label="Fechar menu" onClick={() => setDrawerOpen(false)} autoFocus />
-            </div>
-            <SidebarContent portal={portal} nav={nav} subtitle={session.orgName} collapsed={false} />
-          </div>
+      {verComo && (
+        <div role="status" className="sticky top-0 z-50 flex h-10 items-center justify-center gap-2 bg-brand-deep px-3 text-xs font-semibold text-on-brand-deep sm:text-sm">
+          <span className="truncate">Você está vendo como {session.orgName}</span>
+          <span aria-hidden>·</span>
+          <button
+            type="button"
+            onClick={() => {
+              signIn('admin');
+              navigate('/admin/entidades');
+            }}
+            className="shrink-0 rounded-sm underline underline-offset-2"
+          >
+            Voltar ao admin
+          </button>
         </div>
       )}
-
-      <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-bg-card px-2 sm:px-4">
-          <IconButton
-            className="lg:hidden"
-            icon={Menu}
-            label="Abrir menu"
-            aria-expanded={drawerOpen}
-            onClick={() => setDrawerOpen(true)}
-          />
-          <GeraSymbol size={28} className="lg:hidden" />
-          <div className="ml-auto flex min-w-0 items-center gap-1">
-            <span className="hidden truncate px-2 text-sm font-semibold text-ink-muted sm:block">{session.userName}</span>
-            <ThemeToggle />
-            <IconButton icon={LogOut} label="Sair" onClick={signOut} />
+      <div className="lg:flex">
+        <aside
+          className={cx(
+            'sticky hidden shrink-0 flex-col border-r border-border bg-bg-card lg:flex',
+            verComo ? 'top-10 h-[calc(100vh-40px)]' : 'top-0 h-screen',
+            collapsed ? 'w-[76px]' : 'w-[264px]',
+          )}
+        >
+          <SidebarContent portal={portal} nav={nav} subtitle={session.orgName} collapsed={collapsed} />
+          <div className={cx('border-t border-border p-3', collapsed && 'flex justify-center')}>
+            <IconButton
+              icon={collapsed ? PanelLeftOpen : PanelLeftClose}
+              label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+              aria-expanded={!collapsed}
+              onClick={() => setCollapsed((c) => !c)}
+            />
           </div>
-        </header>
-        <main id="conteudo" className="mx-auto max-w-[1200px] px-4 py-6 lg:px-8 lg:py-8">
-          <Outlet />
-        </main>
+        </aside>
+
+        {drawerOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+            <div className="absolute inset-0 bg-ink opacity-40" onClick={() => setDrawerOpen(false)} aria-hidden />
+            <div className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-bg-card shadow-raised">
+              <div className="flex justify-end p-2">
+                <IconButton icon={X} label="Fechar menu" onClick={() => setDrawerOpen(false)} autoFocus />
+              </div>
+              <SidebarContent portal={portal} nav={nav} subtitle={session.orgName} collapsed={false} />
+            </div>
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <header className={cx('sticky z-30 flex h-16 items-center gap-2 border-b border-border bg-bg-card px-2 sm:px-4', verComo ? 'top-10' : 'top-0')}>
+            <IconButton
+              className="lg:hidden"
+              icon={Menu}
+              label="Abrir menu"
+              aria-expanded={drawerOpen}
+              onClick={() => setDrawerOpen(true)}
+            />
+            <GeraSymbol size={28} className="lg:hidden" />
+            <div className="ml-auto flex min-w-0 items-center gap-1">
+              <span className="hidden truncate px-2 text-sm font-semibold text-ink-muted sm:block">{session.userName}</span>
+              <ThemeToggle />
+              <IconButton icon={LogOut} label="Sair" onClick={signOut} />
+            </div>
+          </header>
+          <main id="conteudo" className="mx-auto max-w-[1200px] px-4 py-6 lg:px-8 lg:py-8">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );

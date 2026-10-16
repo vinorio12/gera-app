@@ -1,7 +1,7 @@
 // Hooks do TanStack Query sobre a camada de serviços: é o que as telas usam.
 import { QueryClient, keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { resetDb } from '../mocks/db';
-import type { Area } from '../types/domain';
+import type { Area, CategoriaBeneficio } from '../types/domain';
 import { listarOportunidadesDaEntidade, obterBancoDeHoras } from './horas';
 import { obterPainelAdmin, obterPainelEntidade, type Periodo } from './indicadores';
 import { listarOportunidadesAbertas } from './oportunidades';
@@ -21,8 +21,39 @@ import {
   obterResumoPublico,
   type FiltroOportunidades,
 } from './publico';
+import {
+  listarCampanhasGestao,
+  listarEventosGestao,
+  listarIngressosDoEvento,
+  listarMovimentos,
+  listarOportunidadesGestao,
+  listarPatrocinadores,
+  listarProdutosGestao,
+  obterDoacoesDaCampanha,
+  obterEventoGestao,
+  obterOportunidadeGestao,
+  obterPatrocinador,
+  obterProdutoGestao,
+} from './gestao';
 import { listarBeneficiosDoParceiro, listarResgates } from './parceiros';
-import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
+import { listarCertificadosDaEntidade, listarElegiveis, listarMeusCertificados, validarCertificado } from './certificados';
+import { obterFinanceiro } from './financeiro';
+import {
+  listarAuditoria,
+  listarCampanhasAdmin,
+  listarEntidadesAdmin,
+  listarEventosAdmin,
+  listarTodosVoluntarios,
+  obterComite,
+  obterTermoVigente,
+} from './admin';
+import { obterEntidadeConfig } from './configuracoes';
+import { listarBeneficiosAtivos, listarBeneficiosParaVoluntario, listarParceirosAdmin, obterEmpresa, obterPainelEsg } from './beneficios';
+import { listarPedidosExclusao, obterMeuPerfil } from './perfil';
+import { listarNotificacoes } from './notificacoes';
+import { gerarRelatorio, type TipoRelatorio } from './relatorios';
+import { acompanharPedido, listarMeusIngressos, listarMinhasCompras, listarMinhasDoacoes } from './pedidos';
+import { listarEntidades, listarParaReengajar, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +67,9 @@ export const queryClient = new QueryClient({
 
 export const useVoluntariosDaEntidade = (entidadeId: string) =>
   useQuery({ queryKey: ['entidade', entidadeId, 'voluntarios'], queryFn: () => listarVoluntariosDaEntidade(entidadeId) });
+
+export const useParaReengajar = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'reengajar'], queryFn: () => listarParaReengajar(entidadeId) });
 
 export const useVoluntarioDaEntidade = (id: string, entidadeId: string) =>
   useQuery({ queryKey: ['entidade', entidadeId, 'voluntario', id], queryFn: () => obterVoluntarioDaEntidade(id, entidadeId) });
@@ -94,6 +128,103 @@ export const useProdutosPorId = (ids: string[]) =>
 export const useEntidadesPublicas = () => useQuery({ queryKey: ['publico', 'entidades'], queryFn: listarEntidadesPublicas });
 export const useEntidadePublica = (slug: string) => useQuery({ queryKey: ['publico', 'entidade', slug], queryFn: () => obterEntidadePublica(slug) });
 export const useParceiros = () => useQuery({ queryKey: ['publico', 'parceiros'], queryFn: listarParceiros });
+
+// ---------- Pedidos ----------
+/** Dados do voluntário logado para preencher o checkout (só quando há um). */
+export const usePerfilComprador = (voluntarioId?: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'painel'], queryFn: () => obterMeuPainel(voluntarioId!), enabled: !!voluntarioId });
+/** Acompanha o pagamento: consulta a cada segundo enquanto o pedido aguarda. */
+export const useAndamentoPedido = (pedidoId: string | null) =>
+  useQuery({
+    queryKey: ['pedido', pedidoId],
+    queryFn: () => acompanharPedido(pedidoId!),
+    enabled: !!pedidoId,
+    refetchInterval: (q) => (q.state.data?.pedido.status === 'aguardando' ? 1000 : false),
+  });
+export const useMeusIngressos = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'ingressos'], queryFn: () => listarMeusIngressos(voluntarioId) });
+export const useMinhasCompras = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'compras'], queryFn: () => listarMinhasCompras(voluntarioId) });
+export const useMinhasDoacoes = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'doacoes'], queryFn: () => listarMinhasDoacoes(voluntarioId) });
+
+// ---------- Gestão da entidade ----------
+export const useOportunidadesGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'oportunidades-gestao'], queryFn: () => listarOportunidadesGestao(entidadeId) });
+export const useOportunidadeGestao = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'oportunidade', id], queryFn: () => obterOportunidadeGestao(id!, entidadeId), enabled: !!id });
+export const useEventosGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'eventos'], queryFn: () => listarEventosGestao(entidadeId) });
+export const useEventoGestao = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'evento', id], queryFn: () => obterEventoGestao(id!, entidadeId), enabled: !!id });
+export const useIngressosDoEvento = (eventoId: string, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'evento', eventoId, 'ingressos'], queryFn: () => listarIngressosDoEvento(eventoId, entidadeId) });
+export const useProdutosGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'produtos'], queryFn: () => listarProdutosGestao(entidadeId) });
+export const useProdutoGestao = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'produto', id], queryFn: () => obterProdutoGestao(id!, entidadeId), enabled: !!id });
+export const useMovimentosEstoque = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'movimentos'], queryFn: () => listarMovimentos(entidadeId) });
+export const useCampanhasGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'campanhas'], queryFn: () => listarCampanhasGestao(entidadeId) });
+export const useDoacoesDaCampanha = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'campanha', id], queryFn: () => obterDoacoesDaCampanha(id!, entidadeId), enabled: !!id });
+export const usePatrocinadores = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'patrocinadores'], queryFn: () => listarPatrocinadores(entidadeId) });
+export const usePatrocinador = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'patrocinador', id], queryFn: () => obterPatrocinador(id!, entidadeId), enabled: !!id });
+
+// ---------- Financeiro, certificados e relatórios ----------
+export const useFinanceiro = (periodo: Periodo, entidadeId?: string) =>
+  useQuery({
+    queryKey: ['financeiro', entidadeId ?? 'todas', periodo],
+    queryFn: () => obterFinanceiro({ periodo, entidadeId }),
+    placeholderData: keepPreviousData,
+  });
+export const useElegiveis = (entidadeId: string, periodo: Periodo) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'elegiveis', periodo], queryFn: () => listarElegiveis({ entidadeId, periodo }), placeholderData: keepPreviousData });
+export const useCertificadosDaEntidade = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'certificados'], queryFn: () => listarCertificadosDaEntidade(entidadeId) });
+export const useMeusCertificados = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'certificados'], queryFn: () => listarMeusCertificados(voluntarioId) });
+export const useValidacaoCertificado = (codigo: string) =>
+  useQuery({ queryKey: ['publico', 'certificado', codigo], queryFn: () => validarCertificado(codigo), enabled: !!codigo });
+export const useRelatorio = (tipo: TipoRelatorio, periodo: Periodo, entidadeId?: string) =>
+  useQuery({
+    queryKey: ['relatorio', tipo, entidadeId ?? 'todas', periodo],
+    queryFn: () => gerarRelatorio({ tipo, periodo, entidadeId }),
+    placeholderData: keepPreviousData,
+  });
+
+// ---------- Admin e configurações ----------
+export const useEntidadesAdmin = () => useQuery({ queryKey: ['admin', 'entidades'], queryFn: listarEntidadesAdmin });
+export const useTodosVoluntarios = () => useQuery({ queryKey: ['admin', 'voluntarios'], queryFn: listarTodosVoluntarios });
+export const useEventosAdmin = (entidadeId?: string) =>
+  useQuery({ queryKey: ['admin', 'eventos', entidadeId ?? 'todas'], queryFn: () => listarEventosAdmin({ entidadeId }), placeholderData: keepPreviousData });
+export const useCampanhasAdmin = (periodo: Periodo, entidadeId?: string) =>
+  useQuery({ queryKey: ['admin', 'campanhas', entidadeId ?? 'todas', periodo], queryFn: () => listarCampanhasAdmin({ entidadeId, periodo }), placeholderData: keepPreviousData });
+export const useComite = () => useQuery({ queryKey: ['admin', 'comite'], queryFn: obterComite });
+export const useTermoVigente = () => useQuery({ queryKey: ['publico', 'termo'], queryFn: obterTermoVigente });
+export const useAuditoria = () => useQuery({ queryKey: ['admin', 'auditoria'], queryFn: listarAuditoria });
+export const useEntidadeConfig = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'config'], queryFn: () => obterEntidadeConfig(entidadeId) });
+
+// ---------- Benefícios, perfil e notificações ----------
+export const useBeneficiosAtivos = (parceiroId: string) =>
+  useQuery({ queryKey: ['parceiro', parceiroId, 'beneficios-ativos'], queryFn: () => listarBeneficiosAtivos(parceiroId) });
+export const useEmpresa = (parceiroId: string) => useQuery({ queryKey: ['parceiro', parceiroId, 'empresa'], queryFn: () => obterEmpresa(parceiroId) });
+export const usePainelEsg = (parceiroId: string) => useQuery({ queryKey: ['parceiro', parceiroId, 'esg'], queryFn: () => obterPainelEsg(parceiroId) });
+export const useParceirosAdmin = () => useQuery({ queryKey: ['admin', 'parceiros'], queryFn: listarParceirosAdmin });
+export const useBeneficiosParaVoluntario = (voluntarioId: string, categoria?: CategoriaBeneficio) =>
+  useQuery({
+    queryKey: ['voluntario', voluntarioId, 'beneficios', categoria ?? 'todas'],
+    queryFn: () => listarBeneficiosParaVoluntario(voluntarioId, categoria),
+    placeholderData: keepPreviousData,
+  });
+export const useMeuPerfil = (voluntarioId: string) => useQuery({ queryKey: ['voluntario', voluntarioId, 'perfil'], queryFn: () => obterMeuPerfil(voluntarioId) });
+export const usePedidosExclusao = () => useQuery({ queryKey: ['admin', 'lgpd'], queryFn: listarPedidosExclusao });
+export const useNotificacoes = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'notificacoes'], queryFn: () => listarNotificacoes(voluntarioId) });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e

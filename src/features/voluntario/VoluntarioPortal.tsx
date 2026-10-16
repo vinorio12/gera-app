@@ -7,21 +7,32 @@ import { placeholderRoutes } from '../../components/shared/placeholderRoutes';
 import { VOLUNTARIO_MORE, VOLUNTARIO_TABS } from '../../lib/portals';
 import { AcoesPage } from './AcoesPage';
 import { CarteirinhaPage } from './CarteirinhaPage';
+import { MeusCertificadosPage } from './CertificadosPage';
+import { BeneficiosPage } from './BeneficiosPage';
+import { NotificacoesPage, SinoNotificacoes } from './NotificacoesPage';
+import { PerfilPage } from './PerfilPage';
+import { MeusIngressosPage, MinhasDoacoesPage } from './IngressosDoacoesPages';
 import { OportunidadesPage } from './OportunidadesPage';
 import { VoluntarioHome } from './VoluntarioHome';
 
 /** Telas já construídas; o resto da navegação ainda usa a tela provisória. */
-const PRONTAS = new Set(['', 'oportunidades', 'carteirinha', 'acoes', 'mais']);
+const PRONTAS = new Set(['', 'oportunidades', 'carteirinha', 'acoes', 'mais', 'ingressos', 'doacoes', 'certificados', 'beneficios', 'perfil']);
 
 export default function VoluntarioPortal() {
   return (
     <Routes>
-      <Route element={<MobileLayout portal="voluntario" tabs={VOLUNTARIO_TABS} moreItems={VOLUNTARIO_MORE} />}>
+      <Route element={<MobileLayout portal="voluntario" tabs={VOLUNTARIO_TABS} moreItems={VOLUNTARIO_MORE} acoes={<SinoNotificacoes />} />}>
         <Route index element={<VoluntarioHome />} />
         <Route path="oportunidades" element={<OportunidadesPage />} />
         <Route path="carteirinha" element={<CarteirinhaPage />} />
         <Route path="acoes" element={<AcoesPage />} />
         <Route path="mais" element={<VoluntarioMais />} />
+        <Route path="ingressos" element={<MeusIngressosPage />} />
+        <Route path="doacoes" element={<MinhasDoacoesPage />} />
+        <Route path="certificados" element={<MeusCertificadosPage />} />
+        <Route path="beneficios" element={<BeneficiosPage />} />
+        <Route path="perfil" element={<PerfilPage />} />
+        <Route path="notificacoes" element={<NotificacoesPage />} />
         {placeholderRoutes([...VOLUNTARIO_TABS, ...VOLUNTARIO_MORE].filter((item) => !PRONTAS.has(item.path)))}
         <Route path="*" element={<NotFound homePath="/app" />} />
       </Route>

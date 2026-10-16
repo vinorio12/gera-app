@@ -5,6 +5,20 @@ export type Area = (typeof AREAS)[number];
 
 export type Turno = 'Manhã' | 'Tarde' | 'Noite';
 
+/** Cor de destaque da entidade: sempre um dos tokens de portal, nunca um hex. */
+export const CORES_DESTAQUE = ['portal-engajar', 'portal-impulsionar', 'portal-conectar', 'portal-ampliar'] as const;
+export type CorDestaque = (typeof CORES_DESTAQUE)[number];
+
+export interface MembroEquipe {
+  id: string;
+  nome: string;
+  email: string;
+  papel: 'Administrador' | 'Equipe';
+  desde: string;
+  /** Convite enviado e ainda não aceito. */
+  convitePendente: boolean;
+}
+
 export interface Entidade {
   id: string;
   slug: string;
@@ -13,6 +27,25 @@ export interface Entidade {
   areas: Area[];
   bairro: string;
   ativa: boolean;
+  /** null enquanto a entidade espera a aprovação do comitê. */
+  aprovadaEm: string | null;
+  cnpj: string;
+  email: string;
+  telefone: string;
+  responsavel: string;
+  corDestaque: CorDestaque;
+  equipe: MembroEquipe[];
+}
+
+/** Dados do Comitê Social ACIJS, termo de voluntariado e administradores. */
+export interface Comite {
+  nome: string;
+  cnpj: string;
+  email: string;
+  telefone: string;
+  endereco: string;
+  termo: { versao: string; texto: string; publicadoEm: string; historico: Array<{ versao: string; publicadoEm: string }> };
+  admins: Array<{ id: string; nome: string; email: string; desde: string }>;
 }
 
 export interface Voluntario {
@@ -32,6 +65,49 @@ export interface Voluntario {
   desligamento: { em: string; motivo: string } | null;
   /** Número da carteirinha, ex.: JS-2026-004812. */
   registro: string;
+  /** Foto pequena (data URL) enviada no fim do cadastro. */
+  fotoUrl?: string;
+  endereco?: { cep: string; rua: string; numero: string; complemento: string; bairro: string; cidade: string; uf: string };
+  profissao?: string;
+  empresa?: string;
+  /** Ex.: "Sábado · Manhã". */
+  disponibilidade?: string[];
+  usaFormacao?: boolean;
+  /** Versão do termo de voluntariado aceita no cadastro. */
+  termoVersao?: string;
+  /** Preferências de notificação do app. */
+  preferencias?: PreferenciasNotificacao;
+  /** Até quando as notificações já foram vistas (as mais novas contam no sino). */
+  notificacoesVistasEm?: string;
+}
+
+export interface PreferenciasNotificacao {
+  canais: Array<'app' | 'email' | 'whatsapp'>;
+  oportunidades: boolean;
+  lembretes: boolean;
+  beneficios: boolean;
+  carteirinha: boolean;
+}
+
+/** Aviso guardado para um voluntário (ex.: a vaga da lista de espera foi liberada). */
+export interface Aviso {
+  id: string;
+  voluntarioId: string;
+  em: string;
+  titulo: string;
+  texto: string;
+  link: string;
+}
+
+/** LGPD: pedido de exclusão dos dados, visto e atendido pelo comitê. */
+export interface PedidoExclusao {
+  id: string;
+  voluntarioId: string;
+  nome: string;
+  email: string;
+  pedidoEm: string;
+  motivo: string;
+  atendidoEm: string | null;
 }
 
 /** Um registro no banco de horas: cada ação validada gera um. */
@@ -60,9 +136,18 @@ export interface Oportunidade {
   vagas: number;
   inscritos: string[];
   usaFormacao: boolean;
+  /** Encerrada pela entidade: sai do site e não aceita mais inscrições. */
+  encerradaEm: string | null;
+  /** Lista de espera, na ordem de chegada: quando alguém cancela, o primeiro entra. */
+  espera: string[];
 }
 
 export type CategoriaBeneficio = 'Alimentação' | 'Saúde' | 'Educação';
+
+export const CATEGORIAS_BENEFICIO: CategoriaBeneficio[] = ['Alimentação', 'Saúde', 'Educação'];
+
+/** Aprovação do comitê: parceiros e benefícios só vão ao ar depois de aprovados. */
+export type StatusAprovacao = 'pendente' | 'aprovado' | 'recusado';
 
 export interface Beneficio {
   id: string;
@@ -70,6 +155,13 @@ export interface Beneficio {
   titulo: string;
   regra: string;
   categoria: CategoriaBeneficio;
+  status: StatusAprovacao;
+  /** Motivo da recusa, que volta para o parceiro. */
+  motivoRecusa?: string;
+  /** Quanto o voluntário economiza por uso, em reais (estimativa do parceiro, para o relatório ESG). */
+  economiaEstimada: number;
+  /** Quando o comitê aprovou (vira "benefício novo" nas notificações). */
+  aprovadoEm?: string;
 }
 
 export interface Parceiro {
@@ -78,6 +170,13 @@ export interface Parceiro {
   categoria: CategoriaBeneficio;
   endereco: string;
   distanciaKm: number;
+  status: StatusAprovacao;
+  motivoRecusa?: string;
+  cnpj: string;
+  telefone: string;
+  email: string;
+  /** Pessoa de contato na empresa. */
+  contato: string;
 }
 
 /** Uso de um benefício registrado pelo parceiro depois de validar a carteirinha. */
@@ -103,15 +202,30 @@ export interface Evento {
   ingressos: Array<{ tipo: TipoIngresso; preco: number; total: number; vendidos: number }>;
 }
 
+export const TIPOS_INGRESSO: TipoIngresso[] = ['Gratuito', 'Pago', 'VIP', 'Mesa', 'Patrocinador', 'Combo'];
+
+export const TIPOS_PRODUTO = ['Camiseta', 'Caneca', 'Livro', 'Rifa', 'Artesanato', 'Produto de campanha'] as const;
+
 export interface Produto {
   id: string;
   slug: string;
   entidadeId: string;
   nome: string;
-  tipo: 'Camiseta' | 'Caneca' | 'Livro' | 'Rifa' | 'Artesanato' | 'Produto de campanha';
+  tipo: (typeof TIPOS_PRODUTO)[number];
   preco: number;
   estoque: number;
   variacoes: string[];
+}
+
+/** Entrada ou saída de estoque, com motivo. As vendas da loja geram saídas automáticas. */
+export interface MovimentoEstoque {
+  id: string;
+  produtoId: string;
+  entidadeId: string;
+  tipo: 'entrada' | 'saida';
+  quantidade: number;
+  motivo: string;
+  em: string;
 }
 
 export interface Campanha {
@@ -126,7 +240,23 @@ export interface Campanha {
   terminaEm: string;
 }
 
-export type FonteReceita = 'Ingressos' | 'Loja' | 'Campanhas' | 'Doações';
+export type FonteReceita = 'Ingressos' | 'Loja' | 'Campanhas' | 'Doações' | 'Patrocínios';
+
+export const COTAS = ['Ouro', 'Prata', 'Bronze', 'Apoio'] as const;
+export type Cota = (typeof COTAS)[number];
+
+/** Patrocinador de uma entidade: o valor entra no financeiro como "Patrocínios". */
+export interface Patrocinador {
+  id: string;
+  entidadeId: string;
+  nome: string;
+  cota: Cota;
+  valor: number;
+  inicio: string;
+  fim: string;
+  contato: string;
+  contrapartidas: Array<{ id: string; texto: string; entregue: boolean }>;
+}
 
 /** Uma entrada de dinheiro: venda de ingresso ou produto, apoio a campanha ou doação. */
 export interface Entrada {
@@ -137,6 +267,52 @@ export interface Entrada {
   data: string;
   /** Ingressos ou produtos no pedido (vendas). */
   quantidade?: number;
+  /** Apoio a uma campanha. */
+  campanhaId?: string;
+  /** Valor de um patrocinador. */
+  patrocinadorId?: string;
+  /** Quem pagou ou o que foi, para o extrato. */
+  descricao?: string;
+  pedidoId?: string;
+}
+
+export type MetodoPagamento = 'pix' | 'cartao' | 'boleto';
+
+/** Uma compra ou doação. O pagamento é confirmado pelo PaymentProvider. */
+export interface Pedido {
+  id: string;
+  tipo: 'loja' | 'ingressos' | 'doacao';
+  entidadeId: string;
+  descricao: string;
+  valor: number;
+  comprador: { nome: string; email: string };
+  /** Quando quem comprou é um voluntário logado: aparece em "Meus ingressos" / "Minhas doações". */
+  voluntarioId: string | null;
+  metodo: MetodoPagamento | 'gratuito';
+  status: 'aguardando' | 'pago' | 'recusado';
+  criadoEm: string;
+  cobrancaId: string | null;
+  /** Loja: itens e entrega. */
+  itens?: Array<{ produtoId: string; nome: string; variacao: string | null; quantidade: number; preco: number }>;
+  entrega?: 'retirada' | 'entrega';
+  /** Ingressos: evento e tipos comprados. */
+  eventoId?: string;
+  ingressos?: Array<{ tipo: string; quantidade: number; preco: number }>;
+  /** Doação: campanha (ou doação direta à entidade) e se é mensal. */
+  campanhaId?: string | null;
+  mensal?: boolean;
+}
+
+/** Ingresso emitido: um por participante, com QR próprio. */
+export interface IngressoEmitido {
+  id: string;
+  pedidoId: string;
+  eventoId: string;
+  tipo: string;
+  participante: string;
+  codigo: string;
+  /** Check-in no dia do evento: o mesmo ingresso não entra duas vezes. */
+  usadoEm: string | null;
 }
 
 /** Tudo o que o protótipo guarda; amanhã vem da API. */
@@ -153,4 +329,61 @@ export interface MockDb {
   produtos: Produto[];
   campanhas: Campanha[];
   entradas: Entrada[];
+  pedidos: Pedido[];
+  ingressosEmitidos: IngressoEmitido[];
+  movimentosEstoque: MovimentoEstoque[];
+  patrocinadores: Patrocinador[];
+  despesas: Despesa[];
+  certificados: Certificado[];
+  auditoria: RegistroAuditoria[];
+  comite: Comite;
+  pedidosExclusao: PedidoExclusao[];
+  avisos: Aviso[];
+}
+
+export const CATEGORIAS_DESPESA = ['Materiais', 'Alimentação', 'Transporte', 'Eventos', 'Manutenção', 'Serviços', 'Outros'] as const;
+export type CategoriaDespesa = (typeof CATEGORIAS_DESPESA)[number];
+
+/** Saída de dinheiro lançada à mão pela entidade (entra no histórico de auditoria). */
+export interface Despesa {
+  id: string;
+  entidadeId: string;
+  categoria: CategoriaDespesa;
+  descricao: string;
+  valor: number;
+  data: string;
+  lancadaPor: string;
+}
+
+/** Certificado de horas: o código permite a qualquer pessoa conferir em /validar/certificado. */
+export interface Certificado {
+  id: string;
+  codigo: string;
+  voluntarioId: string;
+  entidadeId: string;
+  horas: number;
+  inicio: string;
+  fim: string;
+  emitidoEm: string;
+  emitidoPor: string;
+}
+
+export type AcaoAuditada =
+  | 'Aprovou cadastro'
+  | 'Desligou voluntário'
+  | 'Reativou voluntário'
+  | 'Lançou horas à mão'
+  | 'Lançou despesa'
+  | 'Emitiu certificados';
+
+/** Quem fez o quê e quando: aparece nas configurações do comitê. */
+export interface RegistroAuditoria {
+  id: string;
+  em: string;
+  autor: string;
+  acao: AcaoAuditada | string;
+  entidadeId: string | null;
+  /** Sobre quem ou o quê, ex.: o nome do voluntário. */
+  alvo: string;
+  detalhe?: string;
 }

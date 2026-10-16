@@ -1,0 +1,23 @@
+{
+  "name": "GERA · Comitê Social ACIJS",
+  "short_name": "GERA",
+  "description": "Voluntariado, carteirinha, eventos, campanhas e benefícios do Comitê Social ACIJS em Jaraguá do Sul.",
+  "lang": "pt-BR",
+  "start_url": "./app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F4F6",
+  "theme_color": "#0C582C",
+  "categories": ["social", "lifestyle"],
+  "icons": [
+    { "src": "icons/gera-app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Carteirinha", "url": "./app/carteirinha", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Escanear carteirinha", "url": "./parceiro", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

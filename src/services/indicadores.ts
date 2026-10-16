@@ -78,7 +78,7 @@ function comparavel(db: MockDb, p: Periodo) {
   return periodoAnterior(p).inicio >= inicioDosDados;
 }
 
-export const FONTES: FonteReceita[] = ['Ingressos', 'Loja', 'Campanhas', 'Doações'];
+export const FONTES: FonteReceita[] = ['Ingressos', 'Loja', 'Campanhas', 'Doações', 'Patrocínios'];
 
 function porFonte(entradas: Entrada[]) {
   return FONTES.map((fonte) => ({ fonte, valor: soma(entradas.filter((e) => e.fonte === fonte)) }));
@@ -129,7 +129,7 @@ export async function obterPainelAdmin(input: { periodo: Periodo; entidadeId?: s
   const ativos = voluntariosDo(r).filter((v) => statusDoVoluntario(v, db.horas.filter((h) => h.voluntarioId === v.id)) !== 'desligado');
 
   const ranking = (valor: (entidadeId: string) => number) =>
-    db.entidades.map((e) => ({ entidade: e.nome, valor: valor(e.id) })).sort((a, b) => b.valor - a.valor);
+    db.entidades.filter((e) => e.ativa).map((e) => ({ entidade: e.nome, valor: valor(e.id) })).sort((a, b) => b.valor - a.valor);
 
   return {
     entidadesAtivas: indicador(entidades.filter((e) => e.ativa).length, null),
@@ -171,6 +171,8 @@ export interface PainelEntidade {
     /** Inscritos em ações de hoje que ainda não fizeram check-in. */
     checkInsDeHoje: number;
     estoqueBaixo: Produto[];
+    /** Ativos sem ação há 5 meses ou mais. */
+    paraReengajar: number;
   };
 }
 
@@ -203,6 +205,11 @@ export async function obterPainelEntidade(input: { entidadeId: string; periodo: 
         0,
       ),
       estoqueBaixo: daEntidade(db.produtos, input.entidadeId).filter((p) => p.estoque <= 3),
+      paraReengajar: voluntarios.filter((v) => {
+        const regs = db.horas.filter((h) => h.voluntarioId === v.id);
+        const ultima = regs.reduce<string | null>((m, h) => (!m || h.data > m ? h.data : m), null);
+        return statusDoVoluntario(v, regs) === 'ativo' && !!ultima && ultima <= isoDay(subMonths(new Date(), 5));
+      }).length,
     },
   };
 }

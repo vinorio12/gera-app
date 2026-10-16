@@ -50,6 +50,7 @@ export async function listarOportunidades(f: FiltroOportunidades = {}): Promise<
     .oportunidades.filter(
       (o) =>
         o.data >= hoje() &&
+        !o.encerradaEm &&
         (!f.area || o.area === f.area) &&
         (!f.entidadeId || o.entidadeId === f.entidadeId) &&
         (!f.turno || o.turno === f.turno) &&
@@ -186,7 +187,9 @@ export type ParceiroPublico = Parceiro & { beneficios: Beneficio[] };
 export async function listarParceiros(): Promise<ParceiroPublico[]> {
   await delay();
   const db = getDb();
+  // Só parceiros e benefícios aprovados pelo comitê.
   return db.parceiros
-    .map((p) => ({ ...p, beneficios: db.beneficios.filter((b) => b.parceiroId === p.id) }))
+    .filter((p) => p.status === 'aprovado')
+    .map((p) => ({ ...p, beneficios: db.beneficios.filter((b) => b.parceiroId === p.id && b.status === 'aprovado') }))
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }

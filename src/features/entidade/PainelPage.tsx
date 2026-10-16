@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Award, CalendarPlus, ChevronRight, HandHeart, Handshake, PackagePlus, ScanLine, UserRoundCheck, Boxes } from 'lucide-react';
+import { Award, CalendarPlus, ChevronRight, HandHeart, Handshake, HeartPulse, PackagePlus, ScanLine, UserRoundCheck, Boxes } from 'lucide-react';
 import { KpiCard, PortalVerbo, formatBRL, formatHours, formatNumber } from '@gera/design-system';
 import { FiltroPeriodo, usePeriodo } from '../../components/shared/FiltroPeriodo';
 import { HorasPorMesChart } from '../../components/shared/HorasPorMesChart';
@@ -13,11 +13,11 @@ import { usePainelEntidade } from '../../services/hooks';
 const cardClass = 'rounded-lg border border-border bg-bg-card p-5 shadow-card';
 
 const ATALHOS = [
-  { to: 'certificados', label: 'Emitir certificado', icon: Award },
-  { to: 'eventos', label: 'Novo evento', icon: CalendarPlus },
-  { to: 'patrocinadores', label: 'Novo patrocinador', icon: Handshake },
-  { to: 'loja', label: 'Novo produto', icon: PackagePlus },
-  { to: 'oportunidades', label: 'Nova oportunidade', icon: HandHeart },
+  { to: 'certificados/emitir', label: 'Emitir certificado', icon: Award },
+  { to: 'eventos/novo', label: 'Novo evento', icon: CalendarPlus },
+  { to: 'patrocinadores/novo', label: 'Novo patrocinador', icon: Handshake },
+  { to: 'loja/novo', label: 'Novo produto', icon: PackagePlus },
+  { to: 'oportunidades/nova', label: 'Nova oportunidade', icon: HandHeart },
 ];
 
 export function PainelPage() {
@@ -64,7 +64,7 @@ export function PainelPage() {
             <KpiCard className="min-w-0" label="Próximos eventos" value={formatNumber(painel.data.proximosEventos.atual)} source="agenda da entidade" />
             <KpiCard className="min-w-0" label="Ingressos vendidos" value={formatNumber(painel.data.ingressosVendidos.atual)} delta={variacao(painel.data.ingressosVendidos)} source="pedidos de ingressos" />
             <KpiCard className="min-w-0" label="Produtos vendidos" value={formatNumber(painel.data.produtosVendidos.atual)} delta={variacao(painel.data.produtosVendidos)} source="pedidos da loja" />
-            <KpiCard className="min-w-0 sm:col-span-2" label="Valor arrecadado" value={formatBRL(painel.data.arrecadado.atual)} delta={variacao(painel.data.arrecadado)} source="ingressos, loja, campanhas e doações (simulados)" />
+            <KpiCard className="min-w-0 sm:col-span-2" label="Valor arrecadado" value={formatBRL(painel.data.arrecadado.atual)} delta={variacao(painel.data.arrecadado)} source="ingressos, loja, campanhas, doações e patrocínios (simulados)" />
           </div>
 
           <section className={cardClass} aria-labelledby="horas-mes">
@@ -80,10 +80,11 @@ export function PainelPage() {
   );
 }
 
-function Pendencias({ aprovacoes, checkInsDeHoje, estoqueBaixo }: { aprovacoes: number; checkInsDeHoje: number; estoqueBaixo: Array<{ id: string; nome: string; estoque: number }> }) {
+function Pendencias({ aprovacoes, checkInsDeHoje, estoqueBaixo, paraReengajar }: { aprovacoes: number; checkInsDeHoje: number; estoqueBaixo: Array<{ id: string; nome: string; estoque: number }>; paraReengajar: number }) {
   const itens = [
     aprovacoes > 0 && { to: 'voluntarios', icon: UserRoundCheck, texto: aprovacoes === 1 ? '1 cadastro aguardando aprovação' : `${aprovacoes} cadastros aguardando aprovação` },
     checkInsDeHoje > 0 && { to: 'horas', icon: ScanLine, texto: checkInsDeHoje === 1 ? '1 check-in para validar hoje' : `${checkInsDeHoje} check-ins para validar hoje` },
+    paraReengajar > 0 && { to: 'voluntarios#reengajar', icon: HeartPulse, texto: paraReengajar === 1 ? '1 voluntário para reengajar' : `${paraReengajar} voluntários para reengajar` },
     ...estoqueBaixo.map((p) => ({ to: 'loja', icon: Boxes, texto: `${p.nome}: ${p.estoque === 0 ? 'esgotado' : `últimas ${p.estoque} unidades`}` })),
   ].filter((x): x is { to: string; icon: typeof Boxes; texto: string } => !!x);
 

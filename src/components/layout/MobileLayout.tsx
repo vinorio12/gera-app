@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { GeraSymbol, PORTAL_VERB, cx } from '@gera/design-system';
@@ -12,10 +13,12 @@ interface MobileLayoutProps {
   tabs: NavItem[];
   /** Telas que ficam dentro da aba "mais": a aba aparece ativa quando uma delas está aberta. */
   moreItems?: NavItem[];
+  /** Ações extras no cabeçalho, antes do tema (ex.: o sino de notificações). */
+  acoes?: ReactNode;
 }
 
 /** Portais de celular (Voluntário e Parceiro): barra superior enxuta e abas inferiores. */
-export function MobileLayout({ portal, tabs, moreItems = [] }: MobileLayoutProps) {
+export function MobileLayout({ portal, tabs, moreItems = [], acoes }: MobileLayoutProps) {
   const { signOut } = useAuth();
   const { pathname } = useLocation();
   const base = PORTAL_HOME[portal];
@@ -29,6 +32,7 @@ export function MobileLayout({ portal, tabs, moreItems = [] }: MobileLayoutProps
           <GeraSymbol size={28} />
           <span className="truncate text-sm font-semibold text-ink-muted">{PORTAL_VERB[portal].who}</span>
           <div className="ml-auto flex items-center">
+            {acoes}
             <ThemeToggle />
             <IconButton icon={LogOut} label="Sair" onClick={signOut} />
           </div>

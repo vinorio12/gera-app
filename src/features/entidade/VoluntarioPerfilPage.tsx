@@ -44,7 +44,7 @@ export function VoluntarioPerfilPage() {
     ['Formação', v.formacao],
     ['Áreas de interesse', v.areas.join(', ')],
     ['Cadastro', formatDate(v.cadastroEm)],
-    ['Termo aceito em', v.termoAceitoEm ? formatDate(v.termoAceitoEm) : 'Ainda não'],
+    ['Termo aceito em', v.termoAceitoEm ? `${formatDate(v.termoAceitoEm)}${v.termoVersao ? ` (versão ${v.termoVersao})` : ''}` : 'Ainda não'],
     ['Número da carteirinha', v.registro],
   ];
 

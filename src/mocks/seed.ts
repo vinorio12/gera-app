@@ -6,19 +6,26 @@ import type {
   Area,
   Beneficio,
   Campanha,
+  Certificado,
+  Despesa,
   Entidade,
   Entrada,
   Evento,
+  IngressoEmitido,
   MockDb,
+  MovimentoEstoque,
   Oportunidade,
   Parceiro,
+  Patrocinador,
+  Pedido,
   Produto,
   RegistroHoras,
+  RegistroAuditoria,
   Resgate,
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 3;
+export const DB_VERSION = 9;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -36,7 +43,9 @@ function mulberry32(seed: number) {
 
 const iso = (d: Date) => format(d, 'yyyy-MM-dd');
 
-const ENTIDADES: Array<Entidade & { projetos: string[] }> = [
+type EntidadeBase = Pick<Entidade, 'id' | 'slug' | 'nome' | 'causa' | 'areas' | 'bairro' | 'ativa'> & { projetos: string[] };
+
+const ENTIDADES: EntidadeBase[] = [
   { id: 'ama-jaragua', slug: 'ama-jaragua', nome: 'AMA Jaraguá', causa: 'Apoio a pessoas com autismo e às suas famílias.', areas: ['Saúde', 'Assistência social', 'Educação'], bairro: 'Vila Nova', ativa: true, projetos: ['Oficina de integração sensorial', 'Apoio às famílias', 'Campanha do Agasalho', 'Evento Beneficente'] },
   { id: 'casa-recanto', slug: 'casa-recanto', nome: 'Casa Lar Recanto', causa: 'Acolhimento de crianças e adolescentes.', areas: ['Assistência social', 'Educação'], bairro: 'Czerniewicz', ativa: true, projetos: ['Reforço escolar', 'Tarde de leitura', 'Mutirão de manutenção'] },
   { id: 'instituto-itapocu', slug: 'instituto-itapocu', nome: 'Instituto Rio Itapocu', causa: 'Cuidado com o rio Itapocu e educação ambiental.', areas: ['Meio ambiente', 'Educação'], bairro: 'Centro', ativa: true, projetos: ['Limpeza das margens do Itapocu', 'Plantio de mudas nativas', 'Educação ambiental nas escolas'] },
@@ -101,7 +110,21 @@ export function createSeed(): MockDb {
     return iso(new Date(inicio.getFullYear(), inicio.getMonth(), int(1, ultimoDia)));
   };
 
-  const entidades: Entidade[] = ENTIDADES.map(({ projetos: _projetos, ...e }) => e);
+  // Dados de contato, marca e equipe de cada entidade (fictícios).
+  const CORES: Entidade['corDestaque'][] = ['portal-impulsionar', 'portal-engajar', 'portal-conectar', 'portal-ampliar'];
+  const entidades: Entidade[] = ENTIDADES.map(({ projetos: _projetos, ...e }, i) => ({
+    ...e,
+    aprovadaEm: '2025-03-10',
+    cnpj: `${String(11 + i).padStart(2, '0')}.${String(222 + i * 7).padStart(3, '0')}.333/0001-${String(40 + i).padStart(2, '0')}`,
+    email: `contato@${e.slug}.org.br`,
+    telefone: `(47) 3370-${String(1100 + i * 37).padStart(4, '0')}`,
+    responsavel: ['Marta Hoffmann', 'Sérgio Lima', 'Paula Weber', 'Roberto Klein', 'Lúcia Mendes', 'Carlos Ramos'][i]!,
+    corDestaque: CORES[i % CORES.length]!,
+    equipe: [
+      { id: `${e.id}-m1`, nome: ['Marta Hoffmann', 'Sérgio Lima', 'Paula Weber', 'Roberto Klein', 'Lúcia Mendes', 'Carlos Ramos'][i]!, email: `coordenacao@${e.slug}.org.br`, papel: 'Administrador' as const, desde: '2025-03-10', convitePendente: false },
+      { id: `${e.id}-m2`, nome: `Equipe ${e.nome}`, email: `equipe@${e.slug}.org.br`, papel: 'Equipe' as const, desde: '2025-04-02', convitePendente: false },
+    ],
+  }));
   const projetosDe = (entidadeId: string) => ENTIDADES.find((e) => e.id === entidadeId)!.projetos;
 
   // ---------- Voluntários: Alex e Bruna fixos, mais 118 com os quatro status ----------
@@ -200,7 +223,7 @@ export function createSeed(): MockDb {
     {
       id: 'o-evento-beneficente', entidadeId: 'ama-jaragua', titulo: 'Evento Beneficente', area: 'Assistência social',
       descricao: 'Recepção, oficinas e apoio na cozinha do evento anual da AMA.', data: iso(SEED_TODAY), turno: 'Tarde', horas: 6,
-      local: 'Sede da AMA Jaraguá, Vila Nova', vagas: 20, inscritos: ['v-alex', 'v-bruna'], usaFormacao: false,
+      local: 'Sede da AMA Jaraguá, Vila Nova', vagas: 20, inscritos: ['v-alex', 'v-bruna'], usaFormacao: false, encerradaEm: null, espera: [],
     },
   ];
   const turnos = ['Manhã', 'Tarde', 'Noite'] as const;
@@ -212,7 +235,7 @@ export function createSeed(): MockDb {
         descricao: `${projeto} com a equipe da ${e.nome}. Não precisa de experiência: a gente explica tudo no dia.`,
         data, turno: turnos[(ei + pi) % 3]!, horas: pick([3, 4, 4, 6]), local: `${e.nome}, ${e.bairro}`,
         vagas: int(6, 25), inscritos: sample(ativos.filter((v) => v.entidadeIds.includes(e.id)).map((v) => v.id), int(1, 5)),
-        usaFormacao: pi === 0 && ['Saúde', 'Educação'].includes(e.areas[0]!),
+        usaFormacao: pi === 0 && ['Saúde', 'Educação'].includes(e.areas[0]!), encerradaEm: null, espera: [],
       });
     });
   });
@@ -230,9 +253,24 @@ export function createSeed(): MockDb {
     ['p-cursinho', 'Curso Rumo Certo', 'Educação', 'Rua Max Wilhelm, 210, Baependi', 2.9, [['Bolsa de 30% no pré-vestibular', 'Sujeita a vagas.']]],
     ['p-mercado', 'Mercado Bom Preço', 'Alimentação', 'Rua Ângelo Rubini, 1010, Barra do Rio Cerro', 5.1, [['5% nas compras acima de R$ 100', 'Uma vez por semana.']]],
   ];
-  const parceiros: Parceiro[] = parceirosBase.map(([id, nome, categoria, endereco, distanciaKm]) => ({ id, nome, categoria, endereco, distanciaKm }));
+  const parceiros: Parceiro[] = parceirosBase.map(([id, nome, categoria, endereco, distanciaKm], i) => ({
+    id, nome, categoria, endereco, distanciaKm, status: 'aprovado',
+    cnpj: `${String(30 + i)}.${String(410 + i * 3)}.555/0001-${String(10 + i)}`,
+    telefone: `(47) 3371-${String(2000 + i * 111).padStart(4, '0')}`,
+    email: `contato@${id.slice(2)}.exemplo.com.br`,
+    contato: 'Gerência da loja',
+  }));
+  // Economia estimada por uso (em reais), informada pelo parceiro para o relatório ESG.
+  const ECONOMIA: Record<string, number> = {
+    '10% em qualquer pedido': 3, 'Café coado grátis no aniversário': 6, '15% em pães e salgados': 2.5, 'Sobremesa grátis no almoço': 9,
+    '12% em medicamentos genéricos': 8, '20% em armações': 60, 'Matrícula grátis': 90, 'Aula experimental grátis': 35,
+    '25% na mensalidade': 75, '10% em livros': 6, 'Bolsa de 30% no pré-vestibular': 180, '5% nas compras acima de R$ 100': 7,
+  };
   const beneficios: Beneficio[] = parceirosBase.flatMap(([parceiroId, , categoria, , , lista]) =>
-    lista.map(([titulo, regra], i) => ({ id: `${parceiroId}-b${i}`, parceiroId, titulo, regra, categoria })),
+    lista.map(([titulo, regra], i) => ({
+      id: `${parceiroId}-b${i}`, parceiroId, titulo, regra, categoria, status: 'aprovado' as const,
+      economiaEstimada: ECONOMIA[titulo] ?? 5, aprovadoEm: '2025-04-01',
+    })),
   );
   const resgates: Resgate[] = Array.from({ length: 14 }, (_, i) => {
     const b = pick(beneficios.filter((x) => x.parceiroId === 'p-cafe' || rand() < 0.3));
@@ -349,7 +387,7 @@ export function createSeed(): MockDb {
       const valor = n === c.apoiadores - 1 ? c.arrecadado - soma : Math.max(5, Math.round((media * (0.4 + rand() * 1.2)) / 5) * 5);
       if (valor <= 0) break;
       soma += valor;
-      entrada({ entidadeId: c.entidadeId, fonte: 'Campanhas', valor, data: iso(addDays(SEED_TODAY, -int(0, 60))) });
+      entrada({ entidadeId: c.entidadeId, fonte: 'Campanhas', valor, data: iso(addDays(SEED_TODAY, -int(0, 60))), campanhaId: c.id });
     }
   });
   // Doações avulsas e recorrentes.
@@ -359,8 +397,279 @@ export function createSeed(): MockDb {
     }
   }
 
+  // ---------- Etapa 6 em diante: outra semente, para não mudar os dados gerados acima ----------
+  const r2 = mulberry32(6);
+  const int2 = (min: number, max: number) => min + Math.floor(r2() * (max - min + 1));
+  const pick2 = <T,>(list: readonly T[]): T => list[Math.floor(r2() * list.length)]!;
+
+  // Quem apoiou cada campanha: primeiro nome e inicial (é o que aparece para a entidade).
+  entradas
+    .filter((e) => e.fonte === 'Campanhas')
+    .forEach((e) => {
+      e.descricao = r2() < 0.25 ? 'Doação anônima' : `${pick2(NOMES)} ${pick2(SOBRENOMES).charAt(0)}.`;
+    });
+
+  // Oportunidades que já aconteceram, com os inscritos que foram.
+  ENTIDADES.forEach((e) => {
+    e.projetos.slice(0, 2).forEach((projeto, pi) => {
+      const daEntidade = ativos.filter((v) => v.entidadeIds.includes(e.id)).map((v) => v.id);
+      const vagas = int2(8, 20);
+      oportunidades.push({
+        id: `o-${e.id}-p${pi}`, entidadeId: e.id, titulo: projeto, area: e.areas[pi % e.areas.length]!,
+        descricao: `${projeto} com a equipe da ${e.nome}.`,
+        data: iso(addDays(SEED_TODAY, -(12 + pi * 23))), turno: turnos[pi % 3]!, horas: pick2([3, 4, 6]),
+        local: `${e.nome}, ${e.bairro}`, vagas,
+        inscritos: daEntidade.filter(() => r2() < 0.5).slice(0, vagas),
+        usaFormacao: false, encerradaEm: iso(addDays(SEED_TODAY, -(11 + pi * 23))), espera: [],
+      });
+    });
+  });
+
+  // Ingressos já emitidos: os do Alex (para "Meus ingressos") e alguns do Jantar, para o check-in.
+  const jantar = eventos.find((e) => e.titulo === 'Jantar Beneficente da AMA')!;
+  const palestra = eventos.find((e) => e.titulo === 'Palestra: autismo na escola')!;
+  const pedidos: Pedido[] = [];
+  const ingressosEmitidos: IngressoEmitido[] = [];
+  const emitir = (pedidoId: string, eventoId: string, tipo: string, participante: string) => {
+    const id = `ing-${ingressosEmitidos.length + 1}`;
+    ingressosEmitidos.push({ id, pedidoId, eventoId, tipo, participante, codigo: `GERA-INGRESSO:${id}`, usadoEm: null });
+  };
+  pedidos.push({
+    id: 'ped-1', tipo: 'ingressos', entidadeId: 'ama-jaragua', descricao: `2 ingressos · ${jantar.titulo}`, valor: 180,
+    comprador: { nome: 'Alex Silva', email: 'alex.silva@exemplo.com.br' }, voluntarioId: 'v-alex', metodo: 'pix', status: 'pago',
+    criadoEm: '2026-10-02T19:12:00.000Z', cobrancaId: null, eventoId: jantar.id, ingressos: [{ tipo: 'Pago', quantidade: 2, preco: 90 }],
+  });
+  emitir('ped-1', jantar.id, 'Pago', 'Alex Silva');
+  emitir('ped-1', jantar.id, 'Pago', 'Marina Silva');
+  pedidos.push({
+    id: 'ped-2', tipo: 'ingressos', entidadeId: 'ama-jaragua', descricao: `1 ingresso · ${palestra.titulo}`, valor: 0,
+    comprador: { nome: 'Alex Silva', email: 'alex.silva@exemplo.com.br' }, voluntarioId: 'v-alex', metodo: 'gratuito', status: 'pago',
+    criadoEm: '2026-10-05T10:40:00.000Z', cobrancaId: null, eventoId: palestra.id, ingressos: [{ tipo: 'Gratuito', quantidade: 1, preco: 0 }],
+  });
+  emitir('ped-2', palestra.id, 'Gratuito', 'Alex Silva');
+  for (let n = 0; n < 4; n++) {
+    const nome = `${pick2(NOMES)} ${pick2(SOBRENOMES)}`;
+    const tipo = n === 3 ? 'VIP' : 'Pago';
+    const preco = tipo === 'VIP' ? 180 : 90;
+    pedidos.push({
+      id: `ped-${pedidos.length + 1}`, tipo: 'ingressos', entidadeId: 'ama-jaragua', descricao: `1 ingresso · ${jantar.titulo}`, valor: preco,
+      comprador: { nome, email: email(nome) }, voluntarioId: null, metodo: 'cartao', status: 'pago',
+      criadoEm: `2026-10-0${n + 3}T15:00:00.000Z`, cobrancaId: null, eventoId: jantar.id, ingressos: [{ tipo, quantidade: 1, preco }],
+    });
+    emitir(pedidos[pedidos.length - 1]!.id, jantar.id, tipo, nome);
+  }
+  // A doação do Alex na Reforma da sede (já somada no arrecadado da campanha).
+  const reforma = campanhas.find((c) => c.slug === 'reforma-da-sede')!;
+  const apoioAlex = entradas.find((e) => e.campanhaId === reforma.id)!;
+  apoioAlex.valor = 100;
+  apoioAlex.descricao = 'Alex Silva';
+  apoioAlex.data = '2026-09-20';
+  const ajuste = entradas.filter((e) => e.campanhaId === reforma.id);
+  // Mantém a soma igual ao arrecadado depois de fixar o apoio do Alex em R$ 100.
+  ajuste[ajuste.length - 1]!.valor = reforma.arrecadado - ajuste.slice(0, -1).reduce((s, e) => s + e.valor, 0);
+  apoioAlex.pedidoId = `ped-${pedidos.length + 1}`;
+  pedidos.push({
+    id: apoioAlex.pedidoId, tipo: 'doacao', entidadeId: reforma.entidadeId, descricao: `Doação · ${reforma.titulo}`, valor: 100,
+    comprador: { nome: 'Alex Silva', email: 'alex.silva@exemplo.com.br' }, voluntarioId: 'v-alex', metodo: 'pix', status: 'pago',
+    criadoEm: '2026-09-20T12:00:00.000Z', cobrancaId: null, campanhaId: reforma.id, mensal: false,
+  });
+
+  // Estoque: entrada inicial, algumas vendas e um brinde, terminando no estoque atual.
+  const movimentosEstoque: MovimentoEstoque[] = [];
+  produtos.forEach((p) => {
+    const vendas = Array.from({ length: int2(1, 3) }, () => int2(1, 4));
+    const brinde = r2() < 0.3 ? int2(1, 2) : 0;
+    const inicial = p.estoque + vendas.reduce((s, q) => s + q, 0) + brinde;
+    const mov = (tipo: MovimentoEstoque['tipo'], quantidade: number, motivo: string, dias: number) =>
+      movimentosEstoque.push({ id: `me-${movimentosEstoque.length + 1}`, produtoId: p.id, entidadeId: p.entidadeId, tipo, quantidade, motivo, em: `${iso(addDays(SEED_TODAY, -dias))}T10:00:00.000Z` });
+    mov('entrada', inicial, 'Estoque inicial', 90);
+    vendas.forEach((q, i) => mov('saida', q, 'Venda na loja', 60 - i * 15));
+    if (brinde) mov('saida', brinde, 'Brinde em evento', 10);
+  });
+
+  // Patrocinadores (empresas fictícias), com o valor lançado no financeiro.
+  const EMPRESAS = ['Metalúrgica Vale do Itapocu', 'Têxtil Jaraguá Exemplo', 'Transportadora Rota Norte', 'Construtora Pedra Firme', 'Contabilidade Soma', 'Auto Peças Serra', 'Clínica Sorriso Exemplo', 'Agropecuária Campo Bom'];
+  const VALOR_COTA = { Ouro: 12000, Prata: 6000, Bronze: 3000, Apoio: 1000 } as const;
+  const CONTRAPARTIDAS = {
+    Ouro: ['Logo no banner principal dos eventos', 'Menção nas redes sociais (4 posts)', 'Mesa VIP no evento anual', 'Relatório de impacto no fim da cota'],
+    Prata: ['Logo no banner dos eventos', 'Menção nas redes sociais (2 posts)', 'Relatório de impacto no fim da cota'],
+    Bronze: ['Logo no site da entidade', 'Menção nas redes sociais (1 post)'],
+    Apoio: ['Agradecimento no site da entidade'],
+  } as const;
+  const patrocinadores: Patrocinador[] = [];
+  ENTIDADES.forEach((e, ei) => {
+    const quantos = ei === 0 ? 3 : int2(1, 2);
+    for (let n = 0; n < quantos; n++) {
+      const cota = (['Ouro', 'Prata', 'Bronze', 'Apoio'] as const)[(ei + n) % 4]!;
+      const inicio = iso(addDays(SEED_TODAY, -int2(20, 200)));
+      const id = `pat-${patrocinadores.length + 1}`;
+      patrocinadores.push({
+        id, entidadeId: e.id, nome: EMPRESAS[(ei * 2 + n) % EMPRESAS.length]!, cota, valor: VALOR_COTA[cota], inicio,
+        fim: iso(addMonths(new Date(`${inicio}T12:00:00`), 12)), contato: 'Responsável de marketing · (47) 3370-0000',
+        contrapartidas: CONTRAPARTIDAS[cota].map((texto, k) => ({ id: `${id}-c${k}`, texto, entregue: r2() < 0.5 })),
+      });
+      entrada({ entidadeId: e.id, fonte: 'Patrocínios', valor: VALOR_COTA[cota], data: inicio, patrocinadorId: id, descricao: `Cota ${cota} · ${EMPRESAS[(ei * 2 + n) % EMPRESAS.length]}` });
+    }
+  });
+
+  // ---------- Etapa 7: empresa dos voluntários, despesas, certificados e auditoria ----------
+  const r3 = mulberry32(7);
+  const int3 = (min: number, max: number) => min + Math.floor(r3() * (max - min + 1));
+  const pick3 = <T,>(list: readonly T[]): T => list[Math.floor(r3() * list.length)]!;
+  const EMPREGADORES = [...EMPRESAS.slice(0, 6), 'Indústria de Motores Exemplo', 'Malharia Fio Bom', 'Cooperativa Agrícola Vale', 'Escritório Contábil Exato'];
+  voluntarios.forEach((v) => {
+    if (v.id === 'v-alex') v.empresa = 'Indústria de Motores Exemplo';
+    else if (v.id !== 'v-bruna' && r3() < 0.55) v.empresa = pick3(EMPREGADORES);
+  });
+
+  const DESPESAS: Record<Despesa['categoria'], Array<[string, number, number]>> = {
+    Materiais: [['Material de oficina', 80, 450], ['Material de limpeza', 60, 220]],
+    Alimentação: [['Lanche dos voluntários', 90, 380], ['Compra de alimentos', 200, 1200]],
+    Transporte: [['Combustível da van', 120, 400], ['Frete de doações', 80, 300]],
+    Eventos: [['Aluguel de som e luz', 400, 1500], ['Decoração do evento', 150, 600]],
+    Manutenção: [['Conserto na sede', 150, 900], ['Pintura e reparos', 300, 1400]],
+    Serviços: [['Conta de luz da sede', 180, 420], ['Internet e telefone', 120, 180], ['Contabilidade', 350, 600]],
+    Outros: [['Taxas bancárias', 20, 60]],
+  };
+  const despesas: Despesa[] = [];
+  ENTIDADES.forEach((e) => {
+    for (let mes = 0; mes < 12; mes++) {
+      for (let n = int3(2, 4); n > 0; n--) {
+        const categoria = pick3(Object.keys(DESPESAS) as Array<Despesa['categoria']>);
+        const [descricao, min, max] = pick3(DESPESAS[categoria]);
+        despesas.push({
+          id: `d-${despesas.length + 1}`, entidadeId: e.id, categoria, descricao, valor: int3(min / 5, max / 5) * 5,
+          data: dataNoMes(mes), lancadaPor: `Equipe ${e.nome}`,
+        });
+      }
+    }
+  });
+
+  const codigo = () => {
+    const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const bloco = () => Array.from({ length: 4 }, () => letras[int3(0, letras.length - 1)]).join('');
+    return `GERA-${bloco()}-${bloco()}`;
+  };
+  const certificados: Certificado[] = [];
+  const certificar = (voluntarioId: string, entidadeId: string, inicio: string, fim: string, emitidoEm: string) => {
+    const h = horas.filter((x) => x.voluntarioId === voluntarioId && x.entidadeId === entidadeId && x.data >= inicio && x.data <= fim).reduce((s, x) => s + x.horas, 0);
+    if (h > 0) {
+      certificados.push({ id: `cert-${certificados.length + 1}`, codigo: codigo(), voluntarioId, entidadeId, horas: h, inicio, fim, emitidoEm, emitidoPor: `Equipe ${ENTIDADES.find((e) => e.id === entidadeId)!.nome}` });
+    }
+  };
+  certificar('v-alex', 'ama-jaragua', '2025-05-01', '2025-12-31', '2026-01-10');
+  certificar('v-alex', 'ama-jaragua', '2026-01-01', '2026-06-30', '2026-07-05');
+  ativos.slice(0, 12).forEach((v) => certificar(v.id, v.entidadeIds[0]!, '2026-01-01', '2026-06-30', '2026-07-05'));
+
+  const auditoria: RegistroAuditoria[] = [];
+  const auditado = (em: string, autor: string, acao: string, entidadeId: string | null, alvo: string, detalhe?: string) =>
+    auditoria.push({ id: `aud-${auditoria.length + 1}`, em, autor, acao, entidadeId, alvo, ...(detalhe ? { detalhe } : {}) });
+  voluntarios
+    .filter((v) => v.aprovadoEm && v.aprovadoEm >= '2026-07-01')
+    .slice(0, 8)
+    .forEach((v) => auditado(`${v.aprovadoEm}T14:00:00.000Z`, `Equipe ${ENTIDADES.find((e) => e.id === v.entidadeIds[0])!.nome}`, 'Aprovou cadastro', v.entidadeIds[0]!, v.nome));
+  voluntarios
+    .filter((v) => v.desligamento)
+    .slice(0, 4)
+    .forEach((v) => auditado(`${v.desligamento!.em}T16:30:00.000Z`, `Equipe ${ENTIDADES.find((e) => e.id === v.entidadeIds[0])!.nome}`, 'Desligou voluntário', v.entidadeIds[0]!, v.nome, v.desligamento!.motivo));
+  horas
+    .filter((h) => h.origem === 'manual' && h.data >= '2026-08-01')
+    .slice(0, 5)
+    .forEach((h) => auditado(`${h.data}T18:00:00.000Z`, `Equipe ${ENTIDADES.find((e) => e.id === h.entidadeId)!.nome}`, 'Lançou horas à mão', h.entidadeId, voluntarios.find((v) => v.id === h.voluntarioId)!.nome, `${h.horas} h: ${h.justificativa ?? 'Leitor de QR indisponível no dia'}`));
+  despesas
+    .filter((d) => d.data >= '2026-09-15')
+    .slice(0, 6)
+    .forEach((d) => auditado(`${d.data}T11:00:00.000Z`, d.lancadaPor, 'Lançou despesa', d.entidadeId, d.descricao, `${d.categoria} · R$ ${d.valor}`));
+  auditoria.sort((a, b) => a.em.localeCompare(b.em));
+
+  // ---------- Etapa 8: comitê, termo com versão e uma entidade aguardando aprovação ----------
+  const comite: MockDb['comite'] = {
+    nome: 'Comitê Social ACIJS',
+    cnpj: '83.786.004/0001-62',
+    email: 'comitesocial@acijs.com.br',
+    telefone: '(47) 3275-7000',
+    endereco: 'Rua Octaviano Lombardi, 100, Czerniewicz, Jaraguá do Sul/SC',
+    termo: {
+      versao: '2.0',
+      publicadoEm: '2026-03-01',
+      texto: [
+        'Este termo segue a Lei nº 9.608/1998, que trata do serviço voluntário. Ao aceitar, você declara que:',
+        '- presta serviço voluntário, sem vínculo de emprego e sem remuneração, à entidade escolhida;',
+        '- vai seguir as orientações da entidade e respeitar as pessoas atendidas, com sigilo sobre o que souber delas;',
+        '- pode deixar o voluntariado quando quiser, avisando a entidade;',
+        '- autoriza o uso dos seus dados para cadastro, banco de horas, certificados e carteirinha, conforme a LGPD, e pode pedir a exclusão a qualquer momento;',
+        '- entende que a carteirinha e os benefícios dos parceiros valem enquanto houver ação validada nos últimos 6 meses.',
+      ].join('\n'),
+      historico: [
+        { versao: '1.0', publicadoEm: '2025-01-15' },
+        { versao: '2.0', publicadoEm: '2026-03-01' },
+      ],
+    },
+    admins: [
+      { id: 'adm-1', nome: 'Coordenação do Comitê Social', email: 'comitesocial@acijs.com.br', desde: '2025-01-15' },
+      { id: 'adm-2', nome: 'Secretaria executiva ACIJS', email: 'secretaria@acijs.com.br', desde: '2025-02-01' },
+    ],
+  };
+  voluntarios.forEach((v) => {
+    if (v.termoAceitoEm) v.termoVersao = v.termoAceitoEm >= '2026-03-01' ? '2.0' : '1.0';
+  });
+  entidades.push({
+    id: 'coral-vozes', slug: 'coral-vozes', nome: 'Coral Vozes do Vale', causa: 'Música e canto coral para crianças e idosos.',
+    areas: ['Cultura', 'Educação'], bairro: 'Rau', ativa: false, aprovadaEm: null, cnpj: '19.876.543/0001-21',
+    email: 'contato@coralvozes.org.br', telefone: '(47) 3371-4455', responsavel: 'Helena Kruger', corDestaque: 'portal-engajar',
+    equipe: [{ id: 'coral-vozes-m1', nome: 'Helena Kruger', email: 'helena@coralvozes.org.br', papel: 'Administrador', desde: '2026-10-12', convitePendente: false }],
+  });
+
+  // ---------- Etapa 9: aprovação de parceiros e benefícios, preferências e notificações ----------
+  // Um parceiro novo esperando o comitê, com um benefício também pendente.
+  parceiros.push({
+    id: 'p-odonto', nome: 'Clínica Odonto Sorriso', categoria: 'Saúde', endereco: 'Rua Barão do Rio Branco, 740, Centro', distanciaKm: 1.4,
+    status: 'pendente', cnpj: '41.222.333/0001-55', telefone: '(47) 3372-8800', email: 'contato@odontosorriso.exemplo.com.br', contato: 'Dra. Renata Campos',
+  });
+  beneficios.push(
+    { id: 'p-odonto-b0', parceiroId: 'p-odonto', titulo: 'Limpeza com 40% de desconto', regra: 'Uma vez a cada 6 meses, com agendamento.', categoria: 'Saúde', status: 'pendente', economiaEstimada: 80 },
+    // No Café Exemplo: um benefício novo esperando aprovação e um recusado, com o motivo que volta ao parceiro.
+    { id: 'p-cafe-b2', parceiroId: 'p-cafe', titulo: 'Combo café + pão de queijo por R$ 9', regra: 'De segunda a sexta, das 14h às 17h.', categoria: 'Alimentação', status: 'pendente', economiaEstimada: 4 },
+    { id: 'p-cafe-b3', parceiroId: 'p-cafe', titulo: '50% em tudo, todos os dias', regra: 'Sem limite de uso.', categoria: 'Alimentação', status: 'recusado', economiaEstimada: 15, motivoRecusa: 'Desconto alto demais para manter no tempo. O comitê sugere até 20% ou um limite de usos por semana.' },
+  );
+  // Um benefício aprovado há poucos dias (aparece como "benefício novo").
+  const livraria = beneficios.find((b) => b.id === 'p-livraria-b0')!;
+  livraria.aprovadoEm = iso(addDays(SEED_TODAY, -5));
+  // O Alex está inscrito na próxima ação da AMA (lembrete "sua ação é amanhã").
+  const proximaAma = oportunidades.find((o) => o.id === 'o-ama-jaragua-0')!;
+  if (!proximaAma.inscritos.includes('v-alex')) proximaAma.inscritos.push('v-alex');
+  voluntarios.forEach((v) => {
+    v.preferencias = { canais: ['app', 'email'], oportunidades: true, lembretes: true, beneficios: true, carteirinha: true };
+  });
+  Object.assign(voluntarios.find((v) => v.id === 'v-alex')!, {
+    disponibilidade: ['Sábado · Manhã', 'Sábado · Tarde', 'Quarta · Noite'], profissao: 'Engenheiro eletricista', usaFormacao: false,
+  });
+  Object.assign(voluntarios.find((v) => v.id === 'v-bruna')!, { disponibilidade: ['Sábado · Manhã', 'Domingo · Tarde'], profissao: 'Psicóloga' });
+
+  // ---------- Etapa 10: uma ação lotada da AMA, com lista de espera ----------
+  const lotada = oportunidades.find((o) => o.id === 'o-ama-jaragua-1')!;
+  const daAma = ativos.filter((v) => v.entidadeIds.includes('ama-jaragua')).map((v) => v.id);
+  lotada.vagas = Math.max(3, lotada.inscritos.length);
+  lotada.inscritos = [...new Set([...lotada.inscritos, ...daAma])].filter((id) => id !== 'v-alex').slice(0, lotada.vagas);
+  lotada.vagas = lotada.inscritos.length;
+  lotada.espera = daAma.filter((id) => !lotada.inscritos.includes(id)).slice(0, 1);
+
+  // Três voluntários da AMA ainda ativos, mas sem ação há uns 5 meses (lista "Para reengajar").
+  daAma
+    .filter((id) => !lotada.inscritos.includes(id) && !lotada.espera.includes(id) && !certificados.some((c) => c.voluntarioId === id))
+    .slice(-3)
+    .forEach((id, i) => {
+      const limite = iso(subMonths(SEED_TODAY, 5));
+      for (let k = horas.length - 1; k >= 0; k--) if (horas[k]!.voluntarioId === id && horas[k]!.data > limite) horas.splice(k, 1);
+      horas.push({ id: `h-reengajar-${i}`, voluntarioId: id, entidadeId: 'ama-jaragua', oportunidadeId: null, data: iso(addDays(SEED_TODAY, -(158 + i * 6))), projeto: 'Apoio às famílias', horas: 4, origem: 'qr' });
+      oportunidades.forEach((o) => {
+        if (o.data >= iso(SEED_TODAY)) o.inscritos = o.inscritos.filter((x) => x !== id);
+      });
+    });
+
   return {
     versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,
-    eventos: [...realizados, ...eventos], produtos, campanhas, entradas,
+    eventos: [...realizados, ...eventos], produtos, campanhas, entradas, pedidos, ingressosEmitidos, movimentosEstoque, patrocinadores,
+    despesas, certificados, auditoria, comite, pedidosExclusao: [], avisos: [],
   };
 }

@@ -13,13 +13,25 @@ interface CodeReaderProps {
   onCode: (code: string) => void;
   busy?: boolean;
   submitLabel: string;
+  /** Rótulo do campo de digitar (padrão: número da carteirinha). */
+  inputLabel?: string;
+  placeholder?: string;
+  /** Texto sobre a câmera fechada. */
+  cameraHint?: string;
 }
 
 /**
  * Leitura da carteirinha: câmera (QR) com moldura e lanterna, e o número digitado como alternativa
  * sempre visível (sem câmera, com permissão negada ou na prévia publicada, que não libera a câmera).
  */
-export function CodeReader({ onCode, busy = false, submitLabel }: CodeReaderProps) {
+export function CodeReader({
+  onCode,
+  busy = false,
+  submitLabel,
+  inputLabel = 'Ou digite o número da carteirinha',
+  placeholder = 'JS-2026-004812',
+  cameraHint = 'Aponte a câmera para o QR da carteirinha.',
+}: CodeReaderProps) {
   const inputId = useId();
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<ScannerControls | null>(null);
@@ -105,8 +117,8 @@ export function CodeReader({ onCode, busy = false, submitLabel }: CodeReaderProp
             <Camera size={40} aria-hidden />
             <p className="max-w-xs text-sm">
               {camera === 'error'
-                ? 'Não deu para abrir a câmera (sem permissão ou sem câmera neste aparelho). Digite o número da carteirinha aqui embaixo.'
-                : 'Aponte a câmera para o QR da carteirinha.'}
+                ? 'Não deu para abrir a câmera (sem permissão ou sem câmera neste aparelho). Digite o código aqui embaixo.'
+                : cameraHint}
             </p>
             <Button onClick={start} disabled={camera === 'starting' || busy}>
               <Camera size={18} aria-hidden /> {camera === 'starting' ? 'Abrindo câmera…' : 'Abrir câmera'}
@@ -117,14 +129,14 @@ export function CodeReader({ onCode, busy = false, submitLabel }: CodeReaderProp
 
       <form onSubmit={submit} className="flex flex-col gap-2">
         <label htmlFor={inputId} className={labelClass}>
-          Ou digite o número da carteirinha
+          {inputLabel}
         </label>
         <div className="flex flex-wrap gap-2">
           <input
             id={inputId}
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="JS-2026-004812"
+            placeholder={placeholder}
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}

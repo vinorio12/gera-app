@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Check, Circle } from 'lucide-react';
 import { Carteirinha, cx } from '@gera/design-system';
@@ -10,6 +10,8 @@ import { QR_JANELA_MS, tokenCarteirinha, type EtapaCarteirinha } from '../../lib
 import { formatDate, formatDateTime } from '../../lib/format';
 import { useNow } from '../../lib/useNow';
 import { useMeuPainel } from '../../services/hooks';
+import { lerPainelSalvo, salvarPainel, useOnline } from '../../lib/carteirinhaOffline';
+import { WifiOff } from 'lucide-react';
 
 /** O QR é um token temporário que se renova a cada minuto. */
 function useTokenRenovavel(registro: string) {
@@ -21,6 +23,14 @@ function useTokenRenovavel(registro: string) {
 export function CarteirinhaPage() {
   const { userId } = useSession();
   const painel = useMeuPainel(userId!);
+  const online = useOnline();
+  // Guarda o último painel sincronizado; offline, a carteirinha abre com ele.
+  useEffect(() => {
+    if (painel.data && online) salvarPainel(userId!, painel.data, new Date(painel.dataUpdatedAt));
+  }, [painel.data, painel.dataUpdatedAt, online, userId]);
+  const salvo = online ? null : lerPainelSalvo(userId!);
+
+  if (salvo) return <CarteirinhaOffline salvo={salvo} />;
 
   if (painel.isPending) {
     return (
@@ -61,6 +71,7 @@ export function CarteirinhaPage() {
             <Carteirinha
               className="w-full max-w-[340px]"
               name={v.nome}
+              photoUrl={v.fotoUrl}
               organizations={entidades.map((e) => e.nome)}
               registration={v.registro}
               hours={c.totalHoras}
@@ -135,5 +146,44 @@ function CodigoDePresenca({ registro }: { registro: string }) {
       <p className="font-display text-2xl tracking-[0.06em] tabular-nums text-ink">{registro}</p>
       <p className="text-xs text-ink-muted">O QR se renova em {restante}s</p>
     </section>
+  );
+}
+
+/** Sem rede: a última carteirinha sincronizada, com o QR gerado aqui mesmo. */
+function CarteirinhaOffline({ salvo }: { salvo: NonNullable<ReturnType<typeof lerPainelSalvo>> }) {
+  const { voluntario: v, carteirinha: c, entidades } = salvo.painel;
+  const aviso = `Offline · status sincronizado em ${formatDateTime(salvo.em)}`;
+  return (
+    <>
+      <PageHeader title="Carteirinha" />
+      <div className="flex flex-col items-center gap-4">
+        <p role="status" className="flex w-full max-w-[340px] items-center gap-2 rounded-md bg-info-soft px-4 py-3 text-sm font-semibold text-on-info-soft">
+          <WifiOff size={18} aria-hidden className="shrink-0" /> {aviso}
+        </p>
+        {c.liberada ? (
+          <QrDaCarteirinha registro={v.registro}>
+            {(token) => (
+              <Carteirinha
+                className="w-full max-w-[340px]"
+                name={v.nome}
+                photoUrl={v.fotoUrl}
+                organizations={entidades.map((e) => e.nome)}
+                registration={v.registro}
+                hours={c.totalHoras}
+                issuedAt={formatDate(c.emitidaEm!)}
+                validUntil={formatDate(c.validaAte!)}
+                status={c.status}
+                qr={<QRCodeSVG value={token} size={72} level="M" title="QR de validação da carteirinha" />}
+              />
+            )}
+          </QrDaCarteirinha>
+        ) : (
+          <>
+            <Checklist etapas={c.etapas} />
+            {!v.desligamento && <CodigoDePresenca registro={v.registro} />}
+          </>
+        )}
+      </div>
+    </>
   );
 }

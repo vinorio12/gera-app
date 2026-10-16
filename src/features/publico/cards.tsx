@@ -62,17 +62,22 @@ export function ProdutoCard({ produto: p }: { produto: ProdutoPublico }) {
   );
 }
 
-export function OportunidadeCard({ oportunidade: o }: { oportunidade: OportunidadePublica }) {
+/** Cartão de oportunidade do site. Com `previa`, sai sem links (é a prévia no formulário da entidade). */
+export function OportunidadeCard({ oportunidade: o, previa = false }: { oportunidade: OportunidadePublica; previa?: boolean }) {
   const restantes = o.vagas - o.inscritos.length;
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-border bg-bg-card p-4 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-display text-base uppercase leading-5 tracking-[0.08em] text-ink-muted">{o.area}</p>
-          <h3 className="text-lg font-bold leading-6 text-ink">
-            <Link to={`/oportunidades/${o.id}`} className="hover:text-link hover:underline">
-              {o.titulo}
-            </Link>
+          <h3 className="break-words text-lg font-bold leading-6 text-ink">
+            {previa ? (
+              o.titulo
+            ) : (
+              <Link to={`/oportunidades/${o.id}`} className="hover:text-link hover:underline">
+                {o.titulo}
+              </Link>
+            )}
           </h3>
           <p className="text-sm text-ink-muted">{o.entidadeNome}</p>
         </div>
@@ -92,9 +97,20 @@ export function OportunidadeCard({ oportunidade: o }: { oportunidade: Oportunida
           <MapPin size={16} aria-hidden /> {o.local}
         </li>
       </ul>
-      <ButtonLink to={`/oportunidades/${o.id}`} className="mt-auto justify-center" aria-label={`Quero participar: ${o.titulo}`}>
-        Quero participar
-      </ButtonLink>
+      {previa ? (
+        <span className="gr-btn gr-btn--primary mt-auto justify-center" aria-hidden>
+          Quero participar
+        </span>
+      ) : (
+        <ButtonLink
+          to={`/oportunidades/${o.id}`}
+          variant={restantes > 0 ? 'primary' : 'secondary'}
+          className="mt-auto justify-center"
+          aria-label={`${restantes > 0 ? 'Quero participar' : 'Entrar na lista de espera'}: ${o.titulo}`}
+        >
+          {restantes > 0 ? 'Quero participar' : 'Entrar na lista de espera'}
+        </ButtonLink>
+      )}
     </article>
   );
 }

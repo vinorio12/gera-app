@@ -213,7 +213,7 @@ export function CarrinhoPage() {
               Ir para o pagamento
             </ButtonLink>
           </div>
-          <p className="text-xs text-ink-muted">Retirada na entidade ou entrega, Pix, cartão e boleto entram na próxima etapa do protótipo.</p>
+          <p className="text-xs text-ink-muted">Retire na entidade ou receba em casa (Jaraguá do Sul). Pague com Pix, cartão ou boleto.</p>
         </div>
       )}
     </div>

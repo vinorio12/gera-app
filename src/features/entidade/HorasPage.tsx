@@ -149,7 +149,7 @@ function RegistroManual() {
   return (
     <details className="rounded-lg border border-border bg-bg-card shadow-card">
       <summary className="cursor-pointer px-5 py-4 text-lg font-bold text-ink">Registrar horas manualmente</summary>
-      <form onSubmit={submit} className="grid gap-4 border-t border-border p-5 sm:grid-cols-2">
+      <form onSubmit={submit} noValidate className="grid gap-4 border-t border-border p-5 sm:grid-cols-2">
         <p className="text-sm text-ink-muted sm:col-span-2">
           Use só quando o check-in por QR não deu certo. Todo registro manual precisa de justificativa.
         </p>

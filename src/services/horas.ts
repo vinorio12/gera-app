@@ -1,6 +1,7 @@
 import { commit, delay, getDb, newId } from '../mocks/db';
 import { isoDay, lerCodigo } from '../lib/carteirinha';
 import type { Oportunidade, RegistroHoras } from '../types/domain';
+import { auditar } from './sessao';
 import { ServiceError } from './voluntarios';
 
 export async function listarOportunidadesDaEntidade(entidadeId: string): Promise<Oportunidade[]> {
@@ -66,6 +67,7 @@ export async function registrarHorasManual(input: {
       projeto: input.projeto.trim() || 'Ação voluntária', horas: input.horas, origem: 'manual', justificativa: input.justificativa.trim(),
     });
   });
+  auditar({ acao: 'Lançou horas à mão', entidadeId: input.entidadeId, alvo: v.nome, detalhe: `${input.horas} h em ${input.data}: ${input.justificativa.trim()}` });
 }
 
 export interface RegistroComNome extends RegistroHoras {

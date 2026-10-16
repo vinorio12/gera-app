@@ -6,6 +6,7 @@ import { PORTAL_HOME, useAuth } from '../../lib/auth';
 import { useCart } from '../../lib/cart';
 import { PUBLIC_NAV } from '../../lib/portals';
 import { BrandLogo } from '../shared/BrandLogo';
+import { ErrorBoundary } from '../shared/ErrorBoundary';
 import { IconButton } from '../shared/IconButton';
 import { SkipLink } from '../shared/SkipLink';
 import { ThemeToggle } from '../shared/ThemeToggle';
@@ -104,7 +105,9 @@ export function PublicLayout() {
       </header>
 
       <main id="conteudo" className="flex-1">
-        <Outlet />
+        <ErrorBoundary onde="site" principal={false}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       <PublicFooter />

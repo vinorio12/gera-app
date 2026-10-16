@@ -3,19 +3,23 @@ import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LucideProvider } from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { PublicLayout } from '../components/layout/PublicLayout';
+import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 import { NotFound } from '../components/shared/NotFound';
 import { PageLoader } from '../components/shared/PageLoader';
 import { RequireRole } from '../components/shared/RequireRole';
-import { ScreenPlaceholder } from '../components/shared/ScreenPlaceholder';
 import { ToastProvider } from '../components/shared/Toast';
 import { HomePage } from '../features/publico/HomePage';
 import { LoginPage } from '../features/publico/LoginPage';
+import { CadastroPage } from '../features/publico/CadastroPage';
+import { CheckoutPage } from '../features/publico/CheckoutPage';
+import { IngressosPage } from '../features/publico/IngressosPage';
+import { ValidarPage } from '../features/publico/ValidarPage';
+import { ValidarCertificadoPage } from '../features/publico/ValidarCertificadoPage';
 import { CampanhaDetalhePage, CampanhasPage } from '../features/publico/CampanhasPages';
 import { EntidadeDetalhePage, EntidadesPage, ParceirosPage } from '../features/publico/EntidadesParceirosPages';
 import { EventoDetalhePage, EventosPage } from '../features/publico/EventosPages';
 import { CarrinhoPage, LojaPage, ProdutoPage } from '../features/publico/LojaPages';
 import { OportunidadeDetalhePage, OportunidadesPage } from '../features/publico/OportunidadesPages';
-import { PUBLIC_PLACEHOLDERS } from '../features/publico/pages';
 import { AuthProvider, type Role } from '../lib/auth';
 import { CartProvider } from '../lib/cart';
 import { ThemeProvider } from '../lib/theme';
@@ -31,11 +35,15 @@ const ParceiroPortal = lazy(() => import('../features/parceiro/ParceiroPortal'))
 // então guarda a rota em memória. O app de verdade usa as URLs do navegador.
 const Router = import.meta.env.VITE_ROUTER === 'memory' ? MemoryRouter : BrowserRouter;
 
+const ONDE: Record<Role, string> = { admin: 'portal do comitê', entidade: 'portal da entidade', voluntario: 'app do voluntário', parceiro: 'app do parceiro' };
+
 function Portal({ role, children }: { role: Role; children: ReactNode }) {
   return (
-    <RequireRole role={role}>
-      <Suspense fallback={<PageLoader fullScreen />}>{children}</Suspense>
-    </RequireRole>
+    <ErrorBoundary onde={ONDE[role]}>
+      <RequireRole role={role}>
+        <Suspense fallback={<PageLoader fullScreen />}>{children}</Suspense>
+      </RequireRole>
+    </ErrorBoundary>
   );
 }
 
@@ -64,17 +72,13 @@ export function App() {
                       <Route path="entidades" element={<EntidadesPage />} />
                       <Route path="entidades/:slug" element={<EntidadeDetalhePage />} />
                       <Route path="parceiros" element={<ParceirosPage />} />
-                      {PUBLIC_PLACEHOLDERS.map(({ path, title, summary }) => (
-                        <Route
-                          key={path}
-                          path={path}
-                          element={
-                            <div className="mx-auto max-w-[1200px] px-4 py-10">
-                              <ScreenPlaceholder title={title} summary={summary} />
-                            </div>
-                          }
-                        />
-                      ))}
+                      <Route path="eventos/:slug/ingressos" element={<IngressosPage />} />
+                      <Route path="checkout" element={<CheckoutPage />} />
+                      <Route path="cadastro" element={<CadastroPage />} />
+                      <Route path="validar" element={<ValidarPage />} />
+                      <Route path="validar/certificado" element={<ValidarCertificadoPage />} />
+                      <Route path="validar/certificado/:codigo" element={<ValidarCertificadoPage />} />
+                      <Route path="validar/:token" element={<ValidarPage />} />
                       <Route
                         path="*"
                         element={

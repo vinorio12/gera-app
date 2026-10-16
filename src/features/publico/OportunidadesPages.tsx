@@ -11,7 +11,10 @@ import { inputClass, labelClass } from '../../components/ui/form';
 import { useAuth } from '../../lib/auth';
 import { formatDateShort } from '../../lib/format';
 import { mensagemDeErro, useEntidades, useGeraMutation, useOportunidade, useOportunidades } from '../../services/hooks';
-import { inscrever } from '../../services/oportunidades';
+import { entrarNaFila, inscrever, sairDaFila } from '../../services/oportunidades';
+import { AgendaCompartilhar, urlPublica } from '../../components/shared/AgendaCompartilhar';
+import { agendaDaOportunidade, textoCompartilharOportunidade } from '../../lib/agenda';
+import { posicaoNaFila } from '../../lib/listaEspera';
 import { AREAS, type Area, type Turno } from '../../types/domain';
 import { OportunidadeCard } from './cards';
 
@@ -106,6 +109,8 @@ export function OportunidadeDetalhePage() {
   const { session } = useAuth();
   const toast = useToast();
   const participar = useGeraMutation(() => inscrever(id, session!.userId!));
+  const fila = useGeraMutation(() => entrarNaFila(id, session!.userId!));
+  const sair = useGeraMutation(() => sairDaFila(id, session!.userId!));
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -121,6 +126,7 @@ export function OportunidadeDetalhePage() {
           const o = op.data;
           const restantes = o.vagas - o.inscritos.length;
           const inscrito = !!session?.userId && o.inscritos.includes(session.userId);
+          const posicao = session?.userId ? posicaoNaFila(o, session.userId) : 0;
           return (
             <>
               <PageHeader eyebrow={o.area} title={o.titulo} />
@@ -132,7 +138,9 @@ export function OportunidadeDetalhePage() {
                   <li className="flex items-start gap-2"><MapPin size={20} aria-hidden className="mt-0.5 shrink-0 text-link" /> {o.local}</li>
                   <li className="flex items-start gap-2">
                     <Users size={20} aria-hidden className="mt-0.5 shrink-0 text-link" />
-                    {restantes > 0 ? `${restantes} de ${o.vagas} vagas restantes` : 'Vagas esgotadas'}
+                    {restantes > 0
+                      ? `${restantes} de ${o.vagas} vagas restantes`
+                      : `Vagas esgotadas${o.espera.length ? ` · ${o.espera.length} na lista de espera` : ''}`}
                   </li>
                 </ul>
                 <p className="text-sm text-ink-muted">
@@ -141,15 +149,32 @@ export function OportunidadeDetalhePage() {
                     {o.entidadeNome}
                   </Link>
                 </p>
-                <InlineError>{participar.isError ? mensagemDeErro(participar.error) : null}</InlineError>
+                <InlineError>{participar.isError ? mensagemDeErro(participar.error) : fila.isError ? mensagemDeErro(fila.error) : null}</InlineError>
                 {inscrito ? (
                   <p role="status" className="rounded-md bg-primary-soft px-4 py-3 font-semibold text-on-primary-soft">
                     Você está inscrito. No dia, mostre seu código de presença no check-in.
                   </p>
+                ) : session?.role === 'voluntario' && posicao > 0 ? (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p role="status" className="rounded-md bg-info-soft px-4 py-3 font-semibold text-on-info-soft">
+                      Você é o {posicao}º da lista de espera. Se alguém cancelar, a vaga é sua e você recebe um aviso.
+                    </p>
+                    <Button variant="ghost" disabled={sair.isPending} onClick={() => sair.mutate(undefined, { onSuccess: () => toast.show('Você saiu da lista de espera.') })}>
+                      Sair da lista
+                    </Button>
+                  </div>
+                ) : session?.role === 'voluntario' && restantes <= 0 ? (
+                  <Button
+                    className="self-start"
+                    disabled={fila.isPending}
+                    onClick={() => fila.mutate(undefined, { onSuccess: (n) => toast.show(`Você entrou na lista de espera de ${o.titulo}, na posição ${n}.`) })}
+                  >
+                    {fila.isPending ? 'Entrando…' : 'Entrar na lista de espera'}
+                  </Button>
                 ) : session?.role === 'voluntario' ? (
                   <Button
                     className="self-start"
-                    disabled={participar.isPending || restantes <= 0}
+                    disabled={participar.isPending}
                     onClick={() => participar.mutate(undefined, { onSuccess: () => toast.show(`Inscrição feita em ${o.titulo}. A gente se vê ${formatDateShort(o.data)}!`) })}
                   >
                     {participar.isPending ? 'Inscrevendo…' : 'Quero participar'}
@@ -158,10 +183,15 @@ export function OportunidadeDetalhePage() {
                   <p className="text-sm text-ink-muted">Para participar, entre com um perfil de voluntário.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    <ButtonLink to={`/entrar?next=${encodeURIComponent(`/oportunidades/${o.id}`)}`}>Quero participar</ButtonLink>
+                    <ButtonLink to={`/entrar?next=${encodeURIComponent(`/oportunidades/${o.id}`)}`}>{restantes > 0 ? 'Quero participar' : 'Entrar na lista de espera'}</ButtonLink>
                     <ButtonLink to="/cadastro" variant="secondary">Ainda não tenho cadastro</ButtonLink>
                   </div>
                 )}
+                <AgendaCompartilhar
+                  className="border-t border-border pt-4"
+                  agenda={agendaDaOportunidade(o, urlPublica(`/oportunidades/${o.id}`))}
+                  textoWhatsApp={textoCompartilharOportunidade(o, urlPublica(`/oportunidades/${o.id}`))}
+                />
               </div>
             </>
           );
