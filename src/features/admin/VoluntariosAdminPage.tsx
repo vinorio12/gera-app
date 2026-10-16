@@ -10,7 +10,10 @@ import { inputClass } from '../../components/ui/form';
 import type { Documento } from '../../lib/documento';
 import { formatDate, formatDateTime } from '../../lib/format';
 import { mascararCpf, type VoluntarioAdmin } from '../../services/admin';
-import { useEntidades, useTodosVoluntarios } from '../../services/hooks';
+import { useEntidades, useGeraMutation, usePedidosExclusao, useTodosVoluntarios } from '../../services/hooks';
+import { atenderPedidoExclusao } from '../../services/perfil';
+import { useToast } from '../../components/shared/Toast';
+import { Button } from '@gera/design-system';
 import { AREAS } from '../../types/domain';
 
 const STATUS: Array<{ id: VolunteerStatus | 'todos'; label: string }> = [
@@ -45,6 +48,7 @@ export function VoluntariosAdminPage() {
   return (
     <>
       <PageHeader title="Voluntários" eyebrow="Administrador ACIJS" description="Os voluntários de todas as entidades num lugar só." />
+      <PedidosLgpd />
       {lista.isPending ? (
         <SkeletonList rows={6} />
       ) : lista.isError ? (
@@ -124,6 +128,41 @@ export function VoluntariosAdminPage() {
         </div>
       )}
     </>
+  );
+}
+
+/** Pedidos de exclusão de dados feitos pelos voluntários no perfil (LGPD). */
+function PedidosLgpd() {
+  const pedidos = usePedidosExclusao();
+  const toast = useToast();
+  const atender = useGeraMutation(atenderPedidoExclusao);
+  const abertos = pedidos.data?.filter((p) => !p.atendidoEm) ?? [];
+  if (!pedidos.data || pedidos.data.length === 0) return null;
+  return (
+    <section aria-labelledby="lgpd" className="mb-6 rounded-lg border border-border bg-bg-card p-4 shadow-card">
+      <h2 id="lgpd" className="mb-1 text-lg font-bold text-ink">Pedidos de exclusão (LGPD) · {abertos.length} em aberto</h2>
+      <p className="mb-3 text-sm text-ink-muted">A lei dá 15 dias para responder. Ao atender, o cadastro é excluído e o histórico de horas fica anônimo.</p>
+      <ul className="divide-y divide-border">
+        {pedidos.data.map((p) => (
+          <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+            <div className="min-w-0">
+              <p className="font-semibold text-ink">{p.nome}</p>
+              <p className="text-sm text-ink-muted">
+                {p.email} · pedido em {formatDateTime(p.pedidoEm)}
+                {p.motivo && ` · "${p.motivo}"`}
+              </p>
+            </div>
+            {p.atendidoEm ? (
+              <span className="text-sm font-semibold text-ink-muted">Atendido em {formatDate(p.atendidoEm)}</span>
+            ) : (
+              <Button variant="secondary" disabled={atender.isPending} onClick={() => atender.mutate(p.id, { onSuccess: () => toast.show(`Pedido de ${p.nome} marcado como atendido.`) })}>
+                Marcar como atendido
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

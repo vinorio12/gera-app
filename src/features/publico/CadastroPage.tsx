@@ -18,10 +18,9 @@ import { formatDate } from '../../lib/format';
 import { buscarCep, cadastrarVoluntario, salvarFoto } from '../../services/cadastro';
 import { mensagemDeErro, useEntidades, useGeraMutation, useTermoVigente } from '../../services/hooks';
 import { TermoTexto } from '../../components/shared/TermoTexto';
+import { DisponibilidadeGrade } from '../../components/shared/DisponibilidadeGrade';
 import { AREAS } from '../../types/domain';
 
-const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-const TURNOS = ['Manhã', 'Tarde', 'Noite'];
 
 const schema = z.object({
   nome: z.string().trim().min(3, 'Escreva seu nome completo.').refine((v) => v.includes(' '), 'Escreva nome e sobrenome.'),
@@ -232,45 +231,9 @@ export function CadastroPage() {
               Quero atuar na minha formação quando der
             </label>
 
-            <fieldset aria-describedby={errors.disponibilidade ? 'erro-disp' : undefined}>
+            <fieldset className="min-w-0" aria-describedby={errors.disponibilidade ? 'erro-disp' : undefined}>
               <legend className={labelClass}>Quando você pode</legend>
-              <div className="mt-2 overflow-x-auto rounded-md border border-border">
-                <table className="w-full min-w-[420px] text-sm">
-                  <thead>
-                    <tr className="text-ink-muted">
-                      <th scope="col" className="p-2 text-left font-semibold">Dia</th>
-                      {TURNOS.map((t) => (
-                        <th key={t} scope="col" className="p-2 font-semibold">{t}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DIAS.map((d) => (
-                      <tr key={d} className="border-t border-border">
-                        <th scope="row" className="p-2 text-left font-semibold text-ink">{d}</th>
-                        {TURNOS.map((t) => {
-                          const v = `${d} · ${t}`;
-                          return (
-                            <td key={t} className="p-0 text-center">
-                              <label className="flex h-11 cursor-pointer items-center justify-center">
-                                <input
-                                  type="checkbox"
-                                  aria-label={v}
-                                  checked={disp.includes(v)}
-                                  onChange={(e) =>
-                                    setValue('disponibilidade', e.target.checked ? [...disp, v] : disp.filter((x) => x !== v), { shouldValidate: true })
-                                  }
-                                  className="h-5 w-5 accent-primary"
-                                />
-                              </label>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DisponibilidadeGrade valor={disp} onChange={(v) => setValue('disponibilidade', v, { shouldValidate: true })} />
               {errors.disponibilidade && <p id="erro-disp" className="mt-1 text-sm font-semibold text-on-accent-soft">{errors.disponibilidade.message}</p>}
             </fieldset>
 

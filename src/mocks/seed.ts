@@ -25,7 +25,7 @@ import type {
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 7;
+export const DB_VERSION = 8;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -253,9 +253,24 @@ export function createSeed(): MockDb {
     ['p-cursinho', 'Curso Rumo Certo', 'Educação', 'Rua Max Wilhelm, 210, Baependi', 2.9, [['Bolsa de 30% no pré-vestibular', 'Sujeita a vagas.']]],
     ['p-mercado', 'Mercado Bom Preço', 'Alimentação', 'Rua Ângelo Rubini, 1010, Barra do Rio Cerro', 5.1, [['5% nas compras acima de R$ 100', 'Uma vez por semana.']]],
   ];
-  const parceiros: Parceiro[] = parceirosBase.map(([id, nome, categoria, endereco, distanciaKm]) => ({ id, nome, categoria, endereco, distanciaKm }));
+  const parceiros: Parceiro[] = parceirosBase.map(([id, nome, categoria, endereco, distanciaKm], i) => ({
+    id, nome, categoria, endereco, distanciaKm, status: 'aprovado',
+    cnpj: `${String(30 + i)}.${String(410 + i * 3)}.555/0001-${String(10 + i)}`,
+    telefone: `(47) 3371-${String(2000 + i * 111).padStart(4, '0')}`,
+    email: `contato@${id.slice(2)}.exemplo.com.br`,
+    contato: 'Gerência da loja',
+  }));
+  // Economia estimada por uso (em reais), informada pelo parceiro para o relatório ESG.
+  const ECONOMIA: Record<string, number> = {
+    '10% em qualquer pedido': 3, 'Café coado grátis no aniversário': 6, '15% em pães e salgados': 2.5, 'Sobremesa grátis no almoço': 9,
+    '12% em medicamentos genéricos': 8, '20% em armações': 60, 'Matrícula grátis': 90, 'Aula experimental grátis': 35,
+    '25% na mensalidade': 75, '10% em livros': 6, 'Bolsa de 30% no pré-vestibular': 180, '5% nas compras acima de R$ 100': 7,
+  };
   const beneficios: Beneficio[] = parceirosBase.flatMap(([parceiroId, , categoria, , , lista]) =>
-    lista.map(([titulo, regra], i) => ({ id: `${parceiroId}-b${i}`, parceiroId, titulo, regra, categoria })),
+    lista.map(([titulo, regra], i) => ({
+      id: `${parceiroId}-b${i}`, parceiroId, titulo, regra, categoria, status: 'aprovado' as const,
+      economiaEstimada: ECONOMIA[titulo] ?? 5, aprovadoEm: '2025-04-01',
+    })),
   );
   const resgates: Resgate[] = Array.from({ length: 14 }, (_, i) => {
     const b = pick(beneficios.filter((x) => x.parceiroId === 'p-cafe' || rand() < 0.3));
@@ -605,9 +620,35 @@ export function createSeed(): MockDb {
     equipe: [{ id: 'coral-vozes-m1', nome: 'Helena Kruger', email: 'helena@coralvozes.org.br', papel: 'Administrador', desde: '2026-10-12', convitePendente: false }],
   });
 
+  // ---------- Etapa 9: aprovação de parceiros e benefícios, preferências e notificações ----------
+  // Um parceiro novo esperando o comitê, com um benefício também pendente.
+  parceiros.push({
+    id: 'p-odonto', nome: 'Clínica Odonto Sorriso', categoria: 'Saúde', endereco: 'Rua Barão do Rio Branco, 740, Centro', distanciaKm: 1.4,
+    status: 'pendente', cnpj: '41.222.333/0001-55', telefone: '(47) 3372-8800', email: 'contato@odontosorriso.exemplo.com.br', contato: 'Dra. Renata Campos',
+  });
+  beneficios.push(
+    { id: 'p-odonto-b0', parceiroId: 'p-odonto', titulo: 'Limpeza com 40% de desconto', regra: 'Uma vez a cada 6 meses, com agendamento.', categoria: 'Saúde', status: 'pendente', economiaEstimada: 80 },
+    // No Café Exemplo: um benefício novo esperando aprovação e um recusado, com o motivo que volta ao parceiro.
+    { id: 'p-cafe-b2', parceiroId: 'p-cafe', titulo: 'Combo café + pão de queijo por R$ 9', regra: 'De segunda a sexta, das 14h às 17h.', categoria: 'Alimentação', status: 'pendente', economiaEstimada: 4 },
+    { id: 'p-cafe-b3', parceiroId: 'p-cafe', titulo: '50% em tudo, todos os dias', regra: 'Sem limite de uso.', categoria: 'Alimentação', status: 'recusado', economiaEstimada: 15, motivoRecusa: 'Desconto alto demais para manter no tempo. O comitê sugere até 20% ou um limite de usos por semana.' },
+  );
+  // Um benefício aprovado há poucos dias (aparece como "benefício novo").
+  const livraria = beneficios.find((b) => b.id === 'p-livraria-b0')!;
+  livraria.aprovadoEm = iso(addDays(SEED_TODAY, -5));
+  // O Alex está inscrito na próxima ação da AMA (lembrete "sua ação é amanhã").
+  const proximaAma = oportunidades.find((o) => o.id === 'o-ama-jaragua-0')!;
+  if (!proximaAma.inscritos.includes('v-alex')) proximaAma.inscritos.push('v-alex');
+  voluntarios.forEach((v) => {
+    v.preferencias = { canais: ['app', 'email'], oportunidades: true, lembretes: true, beneficios: true, carteirinha: true };
+  });
+  Object.assign(voluntarios.find((v) => v.id === 'v-alex')!, {
+    disponibilidade: ['Sábado · Manhã', 'Sábado · Tarde', 'Quarta · Noite'], profissao: 'Engenheiro eletricista', usaFormacao: false,
+  });
+  Object.assign(voluntarios.find((v) => v.id === 'v-bruna')!, { disponibilidade: ['Sábado · Manhã', 'Domingo · Tarde'], profissao: 'Psicóloga' });
+
   return {
     versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,
     eventos: [...realizados, ...eventos], produtos, campanhas, entradas, pedidos, ingressosEmitidos, movimentosEstoque, patrocinadores,
-    despesas, certificados, auditoria, comite,
+    despesas, certificados, auditoria, comite, pedidosExclusao: [], avisos: [],
   };
 }

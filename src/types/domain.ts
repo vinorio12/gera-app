@@ -75,6 +75,39 @@ export interface Voluntario {
   usaFormacao?: boolean;
   /** Versão do termo de voluntariado aceita no cadastro. */
   termoVersao?: string;
+  /** Preferências de notificação do app. */
+  preferencias?: PreferenciasNotificacao;
+  /** Até quando as notificações já foram vistas (as mais novas contam no sino). */
+  notificacoesVistasEm?: string;
+}
+
+export interface PreferenciasNotificacao {
+  canais: Array<'app' | 'email' | 'whatsapp'>;
+  oportunidades: boolean;
+  lembretes: boolean;
+  beneficios: boolean;
+  carteirinha: boolean;
+}
+
+/** Aviso guardado para um voluntário (ex.: a vaga da lista de espera foi liberada). */
+export interface Aviso {
+  id: string;
+  voluntarioId: string;
+  em: string;
+  titulo: string;
+  texto: string;
+  link: string;
+}
+
+/** LGPD: pedido de exclusão dos dados, visto e atendido pelo comitê. */
+export interface PedidoExclusao {
+  id: string;
+  voluntarioId: string;
+  nome: string;
+  email: string;
+  pedidoEm: string;
+  motivo: string;
+  atendidoEm: string | null;
 }
 
 /** Um registro no banco de horas: cada ação validada gera um. */
@@ -109,12 +142,24 @@ export interface Oportunidade {
 
 export type CategoriaBeneficio = 'Alimentação' | 'Saúde' | 'Educação';
 
+export const CATEGORIAS_BENEFICIO: CategoriaBeneficio[] = ['Alimentação', 'Saúde', 'Educação'];
+
+/** Aprovação do comitê: parceiros e benefícios só vão ao ar depois de aprovados. */
+export type StatusAprovacao = 'pendente' | 'aprovado' | 'recusado';
+
 export interface Beneficio {
   id: string;
   parceiroId: string;
   titulo: string;
   regra: string;
   categoria: CategoriaBeneficio;
+  status: StatusAprovacao;
+  /** Motivo da recusa, que volta para o parceiro. */
+  motivoRecusa?: string;
+  /** Quanto o voluntário economiza por uso, em reais (estimativa do parceiro, para o relatório ESG). */
+  economiaEstimada: number;
+  /** Quando o comitê aprovou (vira "benefício novo" nas notificações). */
+  aprovadoEm?: string;
 }
 
 export interface Parceiro {
@@ -123,6 +168,13 @@ export interface Parceiro {
   categoria: CategoriaBeneficio;
   endereco: string;
   distanciaKm: number;
+  status: StatusAprovacao;
+  motivoRecusa?: string;
+  cnpj: string;
+  telefone: string;
+  email: string;
+  /** Pessoa de contato na empresa. */
+  contato: string;
 }
 
 /** Uso de um benefício registrado pelo parceiro depois de validar a carteirinha. */
@@ -283,6 +335,8 @@ export interface MockDb {
   certificados: Certificado[];
   auditoria: RegistroAuditoria[];
   comite: Comite;
+  pedidosExclusao: PedidoExclusao[];
+  avisos: Aviso[];
 }
 
 export const CATEGORIAS_DESPESA = ['Materiais', 'Alimentação', 'Transporte', 'Eventos', 'Manutenção', 'Serviços', 'Outros'] as const;

@@ -10,10 +10,11 @@ import { ConfiguracoesAdminPage } from './ConfiguracoesAdminPage';
 import { CampanhasAdminPage, EventosAdminPage, FinanceiroAdminPage } from './ConsolidadosPages';
 import { EntidadesAdminPage, NovaEntidadePage } from './EntidadesAdminPage';
 import { VisaoGeralPage } from './VisaoGeralPage';
+import { ParceirosAdminPage } from './ParceirosAdminPage';
 import { VoluntariosAdminPage } from './VoluntariosAdminPage';
 
 const EYEBROW = 'Administrador ACIJS';
-const PRONTAS = new Set(['', 'entidades', 'voluntarios', 'eventos', 'campanhas', 'financeiro', 'relatorios', 'configuracoes']);
+const PRONTAS = new Set(['', 'entidades', 'voluntarios', 'eventos', 'campanhas', 'financeiro', 'parceiros', 'relatorios', 'configuracoes']);
 
 export default function AdminPortal() {
   return (
@@ -26,6 +27,7 @@ export default function AdminPortal() {
         <Route path="eventos" element={<EventosAdminPage />} />
         <Route path="campanhas" element={<CampanhasAdminPage />} />
         <Route path="financeiro" element={<FinanceiroAdminPage />} />
+        <Route path="parceiros" element={<ParceirosAdminPage />} />
         <Route path="relatorios" element={<AdminRelatorios />} />
         <Route path="configuracoes" element={<ConfiguracoesAdminPage />} />
         {placeholderRoutes(ADMIN_NAV.filter((item) => !PRONTAS.has(item.path)), EYEBROW)}

@@ -1,7 +1,7 @@
 // Hooks do TanStack Query sobre a camada de serviços: é o que as telas usam.
 import { QueryClient, keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { resetDb } from '../mocks/db';
-import type { Area } from '../types/domain';
+import type { Area, CategoriaBeneficio } from '../types/domain';
 import { listarOportunidadesDaEntidade, obterBancoDeHoras } from './horas';
 import { obterPainelAdmin, obterPainelEntidade, type Periodo } from './indicadores';
 import { listarOportunidadesAbertas } from './oportunidades';
@@ -48,6 +48,9 @@ import {
   obterTermoVigente,
 } from './admin';
 import { obterEntidadeConfig } from './configuracoes';
+import { listarBeneficiosAtivos, listarBeneficiosParaVoluntario, listarParceirosAdmin, obterEmpresa, obterPainelEsg } from './beneficios';
+import { listarPedidosExclusao, obterMeuPerfil } from './perfil';
+import { listarNotificacoes } from './notificacoes';
 import { gerarRelatorio, type TipoRelatorio } from './relatorios';
 import { acompanharPedido, listarMeusIngressos, listarMinhasDoacoes } from './pedidos';
 import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
@@ -200,6 +203,23 @@ export const useTermoVigente = () => useQuery({ queryKey: ['publico', 'termo'], 
 export const useAuditoria = () => useQuery({ queryKey: ['admin', 'auditoria'], queryFn: listarAuditoria });
 export const useEntidadeConfig = (entidadeId: string) =>
   useQuery({ queryKey: ['entidade', entidadeId, 'config'], queryFn: () => obterEntidadeConfig(entidadeId) });
+
+// ---------- Benefícios, perfil e notificações ----------
+export const useBeneficiosAtivos = (parceiroId: string) =>
+  useQuery({ queryKey: ['parceiro', parceiroId, 'beneficios-ativos'], queryFn: () => listarBeneficiosAtivos(parceiroId) });
+export const useEmpresa = (parceiroId: string) => useQuery({ queryKey: ['parceiro', parceiroId, 'empresa'], queryFn: () => obterEmpresa(parceiroId) });
+export const usePainelEsg = (parceiroId: string) => useQuery({ queryKey: ['parceiro', parceiroId, 'esg'], queryFn: () => obterPainelEsg(parceiroId) });
+export const useParceirosAdmin = () => useQuery({ queryKey: ['admin', 'parceiros'], queryFn: listarParceirosAdmin });
+export const useBeneficiosParaVoluntario = (voluntarioId: string, categoria?: CategoriaBeneficio) =>
+  useQuery({
+    queryKey: ['voluntario', voluntarioId, 'beneficios', categoria ?? 'todas'],
+    queryFn: () => listarBeneficiosParaVoluntario(voluntarioId, categoria),
+    placeholderData: keepPreviousData,
+  });
+export const useMeuPerfil = (voluntarioId: string) => useQuery({ queryKey: ['voluntario', voluntarioId, 'perfil'], queryFn: () => obterMeuPerfil(voluntarioId) });
+export const usePedidosExclusao = () => useQuery({ queryKey: ['admin', 'lgpd'], queryFn: listarPedidosExclusao });
+export const useNotificacoes = (voluntarioId: string) =>
+  useQuery({ queryKey: ['voluntario', voluntarioId, 'notificacoes'], queryFn: () => listarNotificacoes(voluntarioId) });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e

@@ -5,7 +5,7 @@ import { ErrorState, InlineError } from '../../components/shared/States';
 import { useToast } from '../../components/shared/Toast';
 import { useSession } from '../../lib/auth';
 import { formatDate } from '../../lib/format';
-import { mensagemDeErro, useBeneficiosDoParceiro, useGeraMutation } from '../../services/hooks';
+import { mensagemDeErro, useBeneficiosAtivos, useGeraMutation } from '../../services/hooks';
 import { registrarUso, validarCarteirinha, type ResultadoValidacao } from '../../services/parceiros';
 
 /** Tela inicial do Parceiro: lê a carteirinha, mostra se é elegível e registra o benefício usado. */
@@ -34,7 +34,7 @@ export function EscanearPage() {
 }
 
 function Resultado({ resultado: r, parceiroId, onNovo }: { resultado: ResultadoValidacao; parceiroId: string; onNovo: () => void }) {
-  const beneficios = useBeneficiosDoParceiro(parceiroId);
+  const beneficios = useBeneficiosAtivos(parceiroId);
   const [escolhido, setEscolhido] = useState('');
   const registrar = useGeraMutation(registrarUso);
   const toast = useToast();

@@ -46,8 +46,8 @@ export async function listarBeneficiosDoParceiro(parceiroId: string): Promise<Be
 export async function registrarUso(input: { parceiroId: string; beneficioId: string; voluntarioId: string }) {
   await delay();
   const db = getDb();
-  if (!db.beneficios.some((b) => b.id === input.beneficioId && b.parceiroId === input.parceiroId)) {
-    throw new ServiceError('Escolha um dos seus benefícios.');
+  if (!db.beneficios.some((b) => b.id === input.beneficioId && b.parceiroId === input.parceiroId && b.status === 'aprovado')) {
+    throw new ServiceError('Escolha um dos seus benefícios aprovados.');
   }
   commit((d) => {
     d.resgates.push({ id: newId('r'), ...input, em: new Date().toISOString() });
