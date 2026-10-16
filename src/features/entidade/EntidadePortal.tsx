@@ -7,6 +7,7 @@ import { ENTIDADE_NAV } from '../../lib/portals';
 import { CampanhaDoacoesPage, CampanhaFormPage, CampanhasGestaoPage } from './CampanhasGestao';
 import { EventoCheckInPage, EventoFormPage, EventosGestaoPage } from './EventosGestao';
 import { CertificadosPage, EmitirCertificadosPage } from './CertificadosPage';
+import { ConfiguracoesPage } from './ConfiguracoesPage';
 import { FinanceiroPage } from './FinanceiroPage';
 import { HorasPage } from './HorasPage';
 import { LojaGestaoPage, ProdutoFormPage } from './LojaGestao';
@@ -17,7 +18,7 @@ import { RelatoriosPage } from './RelatoriosPage';
 import { VoluntarioPerfilPage } from './VoluntarioPerfilPage';
 import { VoluntariosPage } from './VoluntariosPage';
 
-const PRONTAS = new Set(['', 'voluntarios', 'horas', 'oportunidades', 'eventos', 'loja', 'campanhas', 'patrocinadores', 'financeiro', 'certificados', 'relatorios']);
+const PRONTAS = new Set(['', 'voluntarios', 'horas', 'oportunidades', 'eventos', 'loja', 'campanhas', 'patrocinadores', 'financeiro', 'certificados', 'relatorios', 'configuracoes']);
 
 export default function EntidadePortal() {
   const { orgName } = useSession();
@@ -49,6 +50,7 @@ export default function EntidadePortal() {
         <Route path="certificados" element={<CertificadosPage />} />
         <Route path="certificados/emitir" element={<EmitirCertificadosPage />} />
         <Route path="relatorios" element={<RelatoriosPage />} />
+        <Route path="configuracoes" element={<ConfiguracoesPage />} />
         {placeholderRoutes(ENTIDADE_NAV.filter((item) => !PRONTAS.has(item.path)), orgName)}
         <Route path="*" element={<NotFound homePath="/entidade" />} />
       </Route>

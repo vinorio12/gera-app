@@ -16,7 +16,8 @@ import { isoDay } from '../../lib/carteirinha';
 import { isValidCpf } from '../../lib/cpf';
 import { formatDate } from '../../lib/format';
 import { buscarCep, cadastrarVoluntario, salvarFoto } from '../../services/cadastro';
-import { mensagemDeErro, useEntidades, useGeraMutation } from '../../services/hooks';
+import { mensagemDeErro, useEntidades, useGeraMutation, useTermoVigente } from '../../services/hooks';
+import { TermoTexto } from '../../components/shared/TermoTexto';
 import { AREAS } from '../../types/domain';
 
 const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -71,6 +72,7 @@ export function CadastroPage() {
   const [passo, setPasso] = useState(0);
   const [concluido, setConcluido] = useState<{ id: string; registro: string; entidade: string; nome: string } | null>(null);
   const entidades = useEntidades();
+  const termo = useTermoVigente();
   const cadastrar = useGeraMutation(cadastrarVoluntario);
   const [cepMsg, setCepMsg] = useState<string | null>(null);
   const form = useForm<Dados>({
@@ -302,17 +304,9 @@ export function CadastroPage() {
           <>
             <section aria-labelledby="termo-titulo" className="flex flex-col gap-2">
               <h2 id="termo-titulo" className="text-lg font-bold text-ink">Termo de adesão ao serviço voluntário</h2>
+              {termo.data && <p className="text-sm text-ink-muted">Versão {termo.data.versao}, publicada em {formatDate(termo.data.publicadoEm)} pelo Comitê Social ACIJS.</p>}
               <div tabIndex={0} className="max-h-64 overflow-y-auto rounded-md border border-border bg-bg-subtle p-4 text-sm text-ink" aria-label="Texto do termo (role para ler)">
-                <p className="mb-2">
-                  Este termo segue a Lei nº 9.608/1998, que trata do serviço voluntário. Ao aceitar, você declara que:
-                </p>
-                <ol className="list-decimal space-y-2 pl-5">
-                  <li>presta serviço voluntário, sem vínculo de emprego e sem remuneração, à entidade escolhida;</li>
-                  <li>vai seguir as orientações da entidade e respeitar as pessoas atendidas, com sigilo sobre o que souber delas;</li>
-                  <li>pode deixar o voluntariado quando quiser, avisando a entidade;</li>
-                  <li>autoriza o uso dos seus dados para cadastro, banco de horas, certificados e carteirinha, conforme a LGPD, e pode pedir a exclusão a qualquer momento;</li>
-                  <li>entende que a carteirinha e os benefícios dos parceiros valem enquanto houver ação validada nos últimos 6 meses.</li>
-                </ol>
+                {termo.data ? <TermoTexto texto={termo.data.texto} /> : <p>Carregando o termo…</p>}
               </div>
             </section>
             <label className="flex min-h-11 cursor-pointer items-start gap-2 text-sm font-semibold text-ink">

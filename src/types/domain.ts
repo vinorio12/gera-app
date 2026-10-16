@@ -5,6 +5,20 @@ export type Area = (typeof AREAS)[number];
 
 export type Turno = 'Manhã' | 'Tarde' | 'Noite';
 
+/** Cor de destaque da entidade: sempre um dos tokens de portal, nunca um hex. */
+export const CORES_DESTAQUE = ['portal-engajar', 'portal-impulsionar', 'portal-conectar', 'portal-ampliar'] as const;
+export type CorDestaque = (typeof CORES_DESTAQUE)[number];
+
+export interface MembroEquipe {
+  id: string;
+  nome: string;
+  email: string;
+  papel: 'Administrador' | 'Equipe';
+  desde: string;
+  /** Convite enviado e ainda não aceito. */
+  convitePendente: boolean;
+}
+
 export interface Entidade {
   id: string;
   slug: string;
@@ -13,6 +27,25 @@ export interface Entidade {
   areas: Area[];
   bairro: string;
   ativa: boolean;
+  /** null enquanto a entidade espera a aprovação do comitê. */
+  aprovadaEm: string | null;
+  cnpj: string;
+  email: string;
+  telefone: string;
+  responsavel: string;
+  corDestaque: CorDestaque;
+  equipe: MembroEquipe[];
+}
+
+/** Dados do Comitê Social ACIJS, termo de voluntariado e administradores. */
+export interface Comite {
+  nome: string;
+  cnpj: string;
+  email: string;
+  telefone: string;
+  endereco: string;
+  termo: { versao: string; texto: string; publicadoEm: string; historico: Array<{ versao: string; publicadoEm: string }> };
+  admins: Array<{ id: string; nome: string; email: string; desde: string }>;
 }
 
 export interface Voluntario {
@@ -40,6 +73,8 @@ export interface Voluntario {
   /** Ex.: "Sábado · Manhã". */
   disponibilidade?: string[];
   usaFormacao?: boolean;
+  /** Versão do termo de voluntariado aceita no cadastro. */
+  termoVersao?: string;
 }
 
 /** Um registro no banco de horas: cada ação validada gera um. */
@@ -247,6 +282,7 @@ export interface MockDb {
   despesas: Despesa[];
   certificados: Certificado[];
   auditoria: RegistroAuditoria[];
+  comite: Comite;
 }
 
 export const CATEGORIAS_DESPESA = ['Materiais', 'Alimentação', 'Transporte', 'Eventos', 'Manutenção', 'Serviços', 'Outros'] as const;

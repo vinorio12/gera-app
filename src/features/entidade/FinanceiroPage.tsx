@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Plus } from 'lucide-react';
-import { Button, KpiCard, cx, formatBRL } from '@gera/design-system';
+import { Button, KpiCard, cx, formatBRL, formatNumber } from '@gera/design-system';
 import { Chips } from '../../components/shared/Chips';
 import { Dialog } from '../../components/shared/Dialog';
 import { EmptyState } from '../../components/shared/EmptyState';
@@ -47,7 +47,7 @@ export function FinanceiroPage() {
 type FiltroTipo = 'todos' | 'entrada' | 'despesa';
 
 /** Resumo, gráfico e extrato do período. Sem entidade, consolida todas (visão do comitê). */
-export function PainelFinanceiro({ entidadeId, titulo }: { entidadeId?: string; titulo: string }) {
+export function PainelFinanceiro({ entidadeId, titulo, mostrarVendas = false }: { entidadeId?: string; titulo: string; mostrarVendas?: boolean }) {
   const filtro = usePeriodo('trimestre');
   const fin = useFinanceiro(filtro.periodo, entidadeId);
   const [tipo, setTipo] = useState<FiltroTipo>('todos');
@@ -79,6 +79,13 @@ export function PainelFinanceiro({ entidadeId, titulo }: { entidadeId?: string; 
               source="entradas menos despesas"
             />
           </div>
+          {mostrarVendas && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <KpiCard className="min-w-0" label="Vendas (pedidos)" value={formatNumber(fin.data.vendas.pedidos)} source="pedidos de ingressos e da loja" />
+              <KpiCard className="min-w-0" label="Ingressos vendidos" value={formatNumber(fin.data.vendas.ingressos)} source="pedidos de ingressos" />
+              <KpiCard className="min-w-0" label="Produtos vendidos" value={formatNumber(fin.data.vendas.produtos)} source="pedidos da loja" />
+            </div>
+          )}
           <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <section className={cardClass} aria-labelledby="fluxo">
               <h2 id="fluxo" className="mb-1 text-lg font-bold text-ink">Entradas e despesas por mês</h2>

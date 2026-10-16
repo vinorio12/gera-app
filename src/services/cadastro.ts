@@ -70,7 +70,7 @@ export async function cadastrarVoluntario(d: NovoVoluntario): Promise<{ id: stri
     throw new ServiceError('Já existe um cadastro com esse CPF. Entre com a sua conta ou fale com a entidade.');
   }
   const entidade = db.entidades.find((e) => e.id === d.entidadeId);
-  if (!entidade) throw new ServiceError('Escolha a entidade que você quer apoiar.');
+  if (!entidade || !entidade.ativa) throw new ServiceError('Escolha a entidade que você quer apoiar.');
   const hoje = isoDay(new Date());
   const ano = hoje.slice(0, 4);
   const seq = db.voluntarios.filter((v) => v.registro.startsWith(`JS-${ano}-`)).length + 5000;
@@ -94,6 +94,7 @@ export async function cadastrarVoluntario(d: NovoVoluntario): Promise<{ id: stri
     empresa: d.empresa.trim(),
     disponibilidade: d.disponibilidade,
     usaFormacao: d.usaFormacao,
+    termoVersao: db.comite.termo.versao,
   };
   commit((db2) => db2.voluntarios.push(v));
   return { id: v.id, registro: v.registro, entidade: entidade.nome };

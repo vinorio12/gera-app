@@ -129,7 +129,7 @@ export async function obterPainelAdmin(input: { periodo: Periodo; entidadeId?: s
   const ativos = voluntariosDo(r).filter((v) => statusDoVoluntario(v, db.horas.filter((h) => h.voluntarioId === v.id)) !== 'desligado');
 
   const ranking = (valor: (entidadeId: string) => number) =>
-    db.entidades.map((e) => ({ entidade: e.nome, valor: valor(e.id) })).sort((a, b) => b.valor - a.valor);
+    db.entidades.filter((e) => e.ativa).map((e) => ({ entidade: e.nome, valor: valor(e.id) })).sort((a, b) => b.valor - a.valor);
 
   return {
     entidadesAtivas: indicador(entidades.filter((e) => e.ativa).length, null),

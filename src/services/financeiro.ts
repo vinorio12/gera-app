@@ -34,6 +34,8 @@ export interface ResumoFinanceiro {
   porMes: Array<{ mes: string; entradas: number; despesas: number }>;
   extrato: Lancamento[];
   porEntidade: Array<{ entidadeId: string; entidade: string; entradas: number; despesas: number; saldo: number }>;
+  /** Vendas no período: pedidos de ingressos e da loja e unidades vendidas. */
+  vendas: { pedidos: number; ingressos: number; produtos: number };
 }
 
 const descricaoPadrao: Record<FonteReceita, string> = {
@@ -104,6 +106,11 @@ export async function obterFinanceiro(input: { periodo: Periodo; entidadeId?: st
         return { entidadeId: e.id, entidade: e.nome, entradas: en, despesas: de, saldo: centavos(en - de) };
       })
       .sort((a, b) => b.entradas - a.entradas),
+    vendas: {
+      pedidos: entradas.filter((e) => e.fonte === 'Ingressos' || e.fonte === 'Loja').length,
+      ingressos: entradas.filter((e) => e.fonte === 'Ingressos').reduce((s, e) => s + (e.quantidade ?? 0), 0),
+      produtos: entradas.filter((e) => e.fonte === 'Loja').reduce((s, e) => s + (e.quantidade ?? 0), 0),
+    },
   };
 }
 

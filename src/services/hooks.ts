@@ -38,6 +38,16 @@ import {
 import { listarBeneficiosDoParceiro, listarResgates } from './parceiros';
 import { listarCertificadosDaEntidade, listarElegiveis, listarMeusCertificados, validarCertificado } from './certificados';
 import { obterFinanceiro } from './financeiro';
+import {
+  listarAuditoria,
+  listarCampanhasAdmin,
+  listarEntidadesAdmin,
+  listarEventosAdmin,
+  listarTodosVoluntarios,
+  obterComite,
+  obterTermoVigente,
+} from './admin';
+import { obterEntidadeConfig } from './configuracoes';
 import { gerarRelatorio, type TipoRelatorio } from './relatorios';
 import { acompanharPedido, listarMeusIngressos, listarMinhasDoacoes } from './pedidos';
 import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
@@ -177,6 +187,19 @@ export const useRelatorio = (tipo: TipoRelatorio, periodo: Periodo, entidadeId?:
     queryFn: () => gerarRelatorio({ tipo, periodo, entidadeId }),
     placeholderData: keepPreviousData,
   });
+
+// ---------- Admin e configurações ----------
+export const useEntidadesAdmin = () => useQuery({ queryKey: ['admin', 'entidades'], queryFn: listarEntidadesAdmin });
+export const useTodosVoluntarios = () => useQuery({ queryKey: ['admin', 'voluntarios'], queryFn: listarTodosVoluntarios });
+export const useEventosAdmin = (entidadeId?: string) =>
+  useQuery({ queryKey: ['admin', 'eventos', entidadeId ?? 'todas'], queryFn: () => listarEventosAdmin({ entidadeId }), placeholderData: keepPreviousData });
+export const useCampanhasAdmin = (periodo: Periodo, entidadeId?: string) =>
+  useQuery({ queryKey: ['admin', 'campanhas', entidadeId ?? 'todas', periodo], queryFn: () => listarCampanhasAdmin({ entidadeId, periodo }), placeholderData: keepPreviousData });
+export const useComite = () => useQuery({ queryKey: ['admin', 'comite'], queryFn: obterComite });
+export const useTermoVigente = () => useQuery({ queryKey: ['publico', 'termo'], queryFn: obterTermoVigente });
+export const useAuditoria = () => useQuery({ queryKey: ['admin', 'auditoria'], queryFn: listarAuditoria });
+export const useEntidadeConfig = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'config'], queryFn: () => obterEntidadeConfig(entidadeId) });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e

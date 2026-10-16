@@ -25,7 +25,7 @@ import type {
   Voluntario,
 } from '../types/domain';
 
-export const DB_VERSION = 6;
+export const DB_VERSION = 7;
 
 /** Data de referência dos dados: o "hoje" em que o banco de horas termina. */
 export const SEED_TODAY = new Date(2026, 9, 15);
@@ -43,7 +43,9 @@ function mulberry32(seed: number) {
 
 const iso = (d: Date) => format(d, 'yyyy-MM-dd');
 
-const ENTIDADES: Array<Entidade & { projetos: string[] }> = [
+type EntidadeBase = Pick<Entidade, 'id' | 'slug' | 'nome' | 'causa' | 'areas' | 'bairro' | 'ativa'> & { projetos: string[] };
+
+const ENTIDADES: EntidadeBase[] = [
   { id: 'ama-jaragua', slug: 'ama-jaragua', nome: 'AMA Jaraguá', causa: 'Apoio a pessoas com autismo e às suas famílias.', areas: ['Saúde', 'Assistência social', 'Educação'], bairro: 'Vila Nova', ativa: true, projetos: ['Oficina de integração sensorial', 'Apoio às famílias', 'Campanha do Agasalho', 'Evento Beneficente'] },
   { id: 'casa-recanto', slug: 'casa-recanto', nome: 'Casa Lar Recanto', causa: 'Acolhimento de crianças e adolescentes.', areas: ['Assistência social', 'Educação'], bairro: 'Czerniewicz', ativa: true, projetos: ['Reforço escolar', 'Tarde de leitura', 'Mutirão de manutenção'] },
   { id: 'instituto-itapocu', slug: 'instituto-itapocu', nome: 'Instituto Rio Itapocu', causa: 'Cuidado com o rio Itapocu e educação ambiental.', areas: ['Meio ambiente', 'Educação'], bairro: 'Centro', ativa: true, projetos: ['Limpeza das margens do Itapocu', 'Plantio de mudas nativas', 'Educação ambiental nas escolas'] },
@@ -108,7 +110,21 @@ export function createSeed(): MockDb {
     return iso(new Date(inicio.getFullYear(), inicio.getMonth(), int(1, ultimoDia)));
   };
 
-  const entidades: Entidade[] = ENTIDADES.map(({ projetos: _projetos, ...e }) => e);
+  // Dados de contato, marca e equipe de cada entidade (fictícios).
+  const CORES: Entidade['corDestaque'][] = ['portal-impulsionar', 'portal-engajar', 'portal-conectar', 'portal-ampliar'];
+  const entidades: Entidade[] = ENTIDADES.map(({ projetos: _projetos, ...e }, i) => ({
+    ...e,
+    aprovadaEm: '2025-03-10',
+    cnpj: `${String(11 + i).padStart(2, '0')}.${String(222 + i * 7).padStart(3, '0')}.333/0001-${String(40 + i).padStart(2, '0')}`,
+    email: `contato@${e.slug}.org.br`,
+    telefone: `(47) 3370-${String(1100 + i * 37).padStart(4, '0')}`,
+    responsavel: ['Marta Hoffmann', 'Sérgio Lima', 'Paula Weber', 'Roberto Klein', 'Lúcia Mendes', 'Carlos Ramos'][i]!,
+    corDestaque: CORES[i % CORES.length]!,
+    equipe: [
+      { id: `${e.id}-m1`, nome: ['Marta Hoffmann', 'Sérgio Lima', 'Paula Weber', 'Roberto Klein', 'Lúcia Mendes', 'Carlos Ramos'][i]!, email: `coordenacao@${e.slug}.org.br`, papel: 'Administrador' as const, desde: '2025-03-10', convitePendente: false },
+      { id: `${e.id}-m2`, nome: `Equipe ${e.nome}`, email: `equipe@${e.slug}.org.br`, papel: 'Equipe' as const, desde: '2025-04-02', convitePendente: false },
+    ],
+  }));
   const projetosDe = (entidadeId: string) => ENTIDADES.find((e) => e.id === entidadeId)!.projetos;
 
   // ---------- Voluntários: Alex e Bruna fixos, mais 118 com os quatro status ----------
@@ -551,9 +567,47 @@ export function createSeed(): MockDb {
     .forEach((d) => auditado(`${d.data}T11:00:00.000Z`, d.lancadaPor, 'Lançou despesa', d.entidadeId, d.descricao, `${d.categoria} · R$ ${d.valor}`));
   auditoria.sort((a, b) => a.em.localeCompare(b.em));
 
+  // ---------- Etapa 8: comitê, termo com versão e uma entidade aguardando aprovação ----------
+  const comite: MockDb['comite'] = {
+    nome: 'Comitê Social ACIJS',
+    cnpj: '83.786.004/0001-62',
+    email: 'comitesocial@acijs.com.br',
+    telefone: '(47) 3275-7000',
+    endereco: 'Rua Octaviano Lombardi, 100, Czerniewicz, Jaraguá do Sul/SC',
+    termo: {
+      versao: '2.0',
+      publicadoEm: '2026-03-01',
+      texto: [
+        'Este termo segue a Lei nº 9.608/1998, que trata do serviço voluntário. Ao aceitar, você declara que:',
+        '- presta serviço voluntário, sem vínculo de emprego e sem remuneração, à entidade escolhida;',
+        '- vai seguir as orientações da entidade e respeitar as pessoas atendidas, com sigilo sobre o que souber delas;',
+        '- pode deixar o voluntariado quando quiser, avisando a entidade;',
+        '- autoriza o uso dos seus dados para cadastro, banco de horas, certificados e carteirinha, conforme a LGPD, e pode pedir a exclusão a qualquer momento;',
+        '- entende que a carteirinha e os benefícios dos parceiros valem enquanto houver ação validada nos últimos 6 meses.',
+      ].join('\n'),
+      historico: [
+        { versao: '1.0', publicadoEm: '2025-01-15' },
+        { versao: '2.0', publicadoEm: '2026-03-01' },
+      ],
+    },
+    admins: [
+      { id: 'adm-1', nome: 'Coordenação do Comitê Social', email: 'comitesocial@acijs.com.br', desde: '2025-01-15' },
+      { id: 'adm-2', nome: 'Secretaria executiva ACIJS', email: 'secretaria@acijs.com.br', desde: '2025-02-01' },
+    ],
+  };
+  voluntarios.forEach((v) => {
+    if (v.termoAceitoEm) v.termoVersao = v.termoAceitoEm >= '2026-03-01' ? '2.0' : '1.0';
+  });
+  entidades.push({
+    id: 'coral-vozes', slug: 'coral-vozes', nome: 'Coral Vozes do Vale', causa: 'Música e canto coral para crianças e idosos.',
+    areas: ['Cultura', 'Educação'], bairro: 'Rau', ativa: false, aprovadaEm: null, cnpj: '19.876.543/0001-21',
+    email: 'contato@coralvozes.org.br', telefone: '(47) 3371-4455', responsavel: 'Helena Kruger', corDestaque: 'portal-engajar',
+    equipe: [{ id: 'coral-vozes-m1', nome: 'Helena Kruger', email: 'helena@coralvozes.org.br', papel: 'Administrador', desde: '2026-10-12', convitePendente: false }],
+  });
+
   return {
     versao: DB_VERSION, entidades, voluntarios, horas, oportunidades, parceiros, beneficios, resgates,
     eventos: [...realizados, ...eventos], produtos, campanhas, entradas, pedidos, ingressosEmitidos, movimentosEstoque, patrocinadores,
-    despesas, certificados, auditoria,
+    despesas, certificados, auditoria, comite,
   };
 }

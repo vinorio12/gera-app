@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/shared/PageHeader';
 import { ErrorState, Skeleton, SkeletonList } from '../../components/shared/States';
 import { useCampanhas, useEntidadePublica, useEntidadesPublicas, useEventos, useOportunidades, useParceiros } from '../../services/hooks';
 import type { CategoriaBeneficio } from '../../types/domain';
+import { COR_DESTAQUE } from '../../lib/corDestaque';
 import { GradeCampanhas } from './CampanhasPages';
 import { GradeEventos } from './EventosPages';
 import { EntidadeCard, FaixaEngrenagem, OportunidadeCard } from './cards';
@@ -53,6 +54,8 @@ export function EntidadeDetalhePage() {
         <div className="flex flex-col gap-8">
           <div className="overflow-hidden rounded-lg">
             <FaixaEngrenagem rotulo={entidade.data.areas.join(' · ')} className="h-40" />
+            {/* Cor de destaque escolhida pela entidade (um token de portal). */}
+            <div aria-hidden className={cx('h-2', COR_DESTAQUE[entidade.data.corDestaque].amostra)} />
           </div>
           <PageHeader title={entidade.data.nome} description={entidade.data.causa} />
           <p className="-mt-6 flex items-center gap-2 text-ink-muted">
