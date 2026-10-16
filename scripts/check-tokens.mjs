@@ -2,8 +2,9 @@
 // Falha se encontrar hex, rgb()/hsl() ou classes da paleta padrão do Tailwind.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const PALETTE = 'white|black|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
 const RULES = [
   { name: 'cor hex', re: /#[0-9a-fA-F]{3,8}\b/g },

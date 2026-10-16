@@ -68,6 +68,8 @@ export interface Oportunidade {
   vagas: number;
   inscritos: string[];
   usaFormacao: boolean;
+  /** Encerrada pela entidade: sai do site e não aceita mais inscrições. */
+  encerradaEm: string | null;
 }
 
 export type CategoriaBeneficio = 'Alimentação' | 'Saúde' | 'Educação';
@@ -111,15 +113,30 @@ export interface Evento {
   ingressos: Array<{ tipo: TipoIngresso; preco: number; total: number; vendidos: number }>;
 }
 
+export const TIPOS_INGRESSO: TipoIngresso[] = ['Gratuito', 'Pago', 'VIP', 'Mesa', 'Patrocinador', 'Combo'];
+
+export const TIPOS_PRODUTO = ['Camiseta', 'Caneca', 'Livro', 'Rifa', 'Artesanato', 'Produto de campanha'] as const;
+
 export interface Produto {
   id: string;
   slug: string;
   entidadeId: string;
   nome: string;
-  tipo: 'Camiseta' | 'Caneca' | 'Livro' | 'Rifa' | 'Artesanato' | 'Produto de campanha';
+  tipo: (typeof TIPOS_PRODUTO)[number];
   preco: number;
   estoque: number;
   variacoes: string[];
+}
+
+/** Entrada ou saída de estoque, com motivo. As vendas da loja geram saídas automáticas. */
+export interface MovimentoEstoque {
+  id: string;
+  produtoId: string;
+  entidadeId: string;
+  tipo: 'entrada' | 'saida';
+  quantidade: number;
+  motivo: string;
+  em: string;
 }
 
 export interface Campanha {
@@ -134,7 +151,23 @@ export interface Campanha {
   terminaEm: string;
 }
 
-export type FonteReceita = 'Ingressos' | 'Loja' | 'Campanhas' | 'Doações';
+export type FonteReceita = 'Ingressos' | 'Loja' | 'Campanhas' | 'Doações' | 'Patrocínios';
+
+export const COTAS = ['Ouro', 'Prata', 'Bronze', 'Apoio'] as const;
+export type Cota = (typeof COTAS)[number];
+
+/** Patrocinador de uma entidade: o valor entra no financeiro como "Patrocínios". */
+export interface Patrocinador {
+  id: string;
+  entidadeId: string;
+  nome: string;
+  cota: Cota;
+  valor: number;
+  inicio: string;
+  fim: string;
+  contato: string;
+  contrapartidas: Array<{ id: string; texto: string; entregue: boolean }>;
+}
 
 /** Uma entrada de dinheiro: venda de ingresso ou produto, apoio a campanha ou doação. */
 export interface Entrada {
@@ -145,6 +178,13 @@ export interface Entrada {
   data: string;
   /** Ingressos ou produtos no pedido (vendas). */
   quantidade?: number;
+  /** Apoio a uma campanha. */
+  campanhaId?: string;
+  /** Valor de um patrocinador. */
+  patrocinadorId?: string;
+  /** Quem pagou ou o que foi, para o extrato. */
+  descricao?: string;
+  pedidoId?: string;
 }
 
 export type MetodoPagamento = 'pix' | 'cartao' | 'boleto';
@@ -182,6 +222,8 @@ export interface IngressoEmitido {
   tipo: string;
   participante: string;
   codigo: string;
+  /** Check-in no dia do evento: o mesmo ingresso não entra duas vezes. */
+  usadoEm: string | null;
 }
 
 /** Tudo o que o protótipo guarda; amanhã vem da API. */
@@ -200,4 +242,6 @@ export interface MockDb {
   entradas: Entrada[];
   pedidos: Pedido[];
   ingressosEmitidos: IngressoEmitido[];
+  movimentosEstoque: MovimentoEstoque[];
+  patrocinadores: Patrocinador[];
 }

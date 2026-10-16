@@ -139,8 +139,11 @@ function concluir(pedidoId: string) {
     if (p.tipo === 'loja') {
       p.itens!.forEach((i) => {
         const prod = db.produtos.find((x) => x.id === i.produtoId);
-        if (prod) prod.estoque = Math.max(0, prod.estoque - i.quantidade);
-        db.entradas.push({ id: newId('en'), entidadeId: prod?.entidadeId ?? p.entidadeId, fonte: 'Loja', valor: arredonda(i.preco * i.quantidade), quantidade: i.quantidade, data: hoje });
+        if (prod) {
+          prod.estoque = Math.max(0, prod.estoque - i.quantidade);
+          db.movimentosEstoque.push({ id: newId('me'), produtoId: prod.id, entidadeId: prod.entidadeId, tipo: 'saida', quantidade: i.quantidade, motivo: 'Venda na loja', em: new Date().toISOString() });
+        }
+        db.entradas.push({ id: newId('en'), entidadeId: prod?.entidadeId ?? p.entidadeId, fonte: 'Loja', valor: arredonda(i.preco * i.quantidade), quantidade: i.quantidade, data: hoje, descricao: `${i.quantidade}× ${i.nome}`, pedidoId: p.id });
       });
     }
     if (p.tipo === 'ingressos') {
@@ -152,12 +155,12 @@ function concluir(pedidoId: string) {
         if (t) t.vendidos += i.quantidade;
         for (let k = 0; k < i.quantidade; k++) {
           const id = newId('ing');
-          db.ingressosEmitidos.push({ id, pedidoId: p.id, eventoId: e.id, tipo: i.tipo, participante: nomes[n++] ?? p.comprador.nome, codigo: `GERA-INGRESSO:${id}` });
+          db.ingressosEmitidos.push({ id, pedidoId: p.id, eventoId: e.id, tipo: i.tipo, participante: nomes[n++] ?? p.comprador.nome, codigo: `GERA-INGRESSO:${id}`, usadoEm: null });
         }
       });
       participantesPendentes.delete(p.id);
       if (p.valor > 0) {
-        db.entradas.push({ id: newId('en'), entidadeId: p.entidadeId, fonte: 'Ingressos', valor: p.valor, quantidade: n, data: hoje });
+        db.entradas.push({ id: newId('en'), entidadeId: p.entidadeId, fonte: 'Ingressos', valor: p.valor, quantidade: n, data: hoje, descricao: p.descricao, pedidoId: p.id });
       }
     }
     if (p.tipo === 'doacao') {
@@ -166,7 +169,7 @@ function concluir(pedidoId: string) {
         c.arrecadado = arredonda(c.arrecadado + p.valor);
         c.apoiadores += 1;
       }
-      db.entradas.push({ id: newId('en'), entidadeId: p.entidadeId, fonte: 'Campanhas', valor: p.valor, data: hoje });
+      db.entradas.push({ id: newId('en'), entidadeId: p.entidadeId, fonte: 'Campanhas', valor: p.valor, data: hoje, campanhaId: p.campanhaId ?? undefined, descricao: p.comprador.nome, pedidoId: p.id });
     }
   });
 }

@@ -97,7 +97,7 @@ export function VoluntariosPage() {
               const visiveis = lista.data.filter((r) => filtro === 'todos' || r.status === filtro);
               if (visiveis.length === 0) return <EmptyState title="Ninguém com esse status agora" />;
               return (
-                <div className="overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card">
+                <div className="relative overflow-x-auto rounded-lg border border-border bg-bg-card shadow-card">
                   <table className="w-full min-w-[640px] text-left text-sm">
                     <thead className="border-b border-border text-ink-muted">
                       <tr>

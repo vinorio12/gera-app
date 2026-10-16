@@ -50,6 +50,7 @@ export async function listarOportunidades(f: FiltroOportunidades = {}): Promise<
     .oportunidades.filter(
       (o) =>
         o.data >= hoje() &&
+        !o.encerradaEm &&
         (!f.area || o.area === f.area) &&
         (!f.entidadeId || o.entidadeId === f.entidadeId) &&
         (!f.turno || o.turno === f.turno) &&

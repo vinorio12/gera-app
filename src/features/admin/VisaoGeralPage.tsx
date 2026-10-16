@@ -73,7 +73,7 @@ export function VisaoGeralPage() {
               label="Valor arrecadado"
               value={formatBRL(painel.data.arrecadado.atual)}
               delta={variacao(painel.data.arrecadado)}
-              source="pagamentos de ingressos, loja, campanhas e doações (simulados)"
+              source="ingressos, loja, campanhas, doações e patrocínios (simulados)"
             />
             <KpiCard
               className="min-w-0"

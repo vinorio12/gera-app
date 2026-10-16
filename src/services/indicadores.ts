@@ -78,7 +78,7 @@ function comparavel(db: MockDb, p: Periodo) {
   return periodoAnterior(p).inicio >= inicioDosDados;
 }
 
-export const FONTES: FonteReceita[] = ['Ingressos', 'Loja', 'Campanhas', 'Doações'];
+export const FONTES: FonteReceita[] = ['Ingressos', 'Loja', 'Campanhas', 'Doações', 'Patrocínios'];
 
 function porFonte(entradas: Entrada[]) {
   return FONTES.map((fonte) => ({ fonte, valor: soma(entradas.filter((e) => e.fonte === fonte)) }));

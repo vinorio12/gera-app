@@ -106,7 +106,7 @@ export async function obterMeuPainel(voluntarioId: string): Promise<MeuPainel> {
   if (!v) throw new ServiceError('Não encontramos seu cadastro.');
   const registros = registrosDe(v.id).sort((a, b) => b.data.localeCompare(a.data));
   const hoje = isoDay(new Date());
-  const futuras = db.oportunidades.filter((o) => o.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
+  const futuras = db.oportunidades.filter((o) => o.data >= hoje && !o.encerradaEm).sort((a, b) => a.data.localeCompare(b.data));
   return {
     voluntario: v,
     entidades: db.entidades.filter((e) => v.entidadeIds.includes(e.id)),

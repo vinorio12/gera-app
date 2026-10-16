@@ -1,4 +1,4 @@
-import { cloneElement, useEffect, useId, useState, type ChangeEvent, type ReactElement, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ChangeEvent } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { InlineError } from '../../components/shared/States';
 import { Stepper } from '../../components/shared/Stepper';
 import { useToast } from '../../components/shared/Toast';
 import { ButtonLink } from '../../components/ui/ButtonLink';
+import { Campo } from '../../components/ui/Campo';
 import { inputClass, labelClass } from '../../components/ui/form';
 import { isoDay } from '../../lib/carteirinha';
 import { isValidCpf } from '../../lib/cpf';
@@ -338,32 +339,6 @@ export function CadastroPage() {
       </form>
     </div>
   );
-}
-
-function Campo({ id, label, erro, dica, children }: { id: string; label: string; erro?: string; dica?: string; children: ReactNode }) {
-  // O id do campo vem do nome registrado; label e mensagens apontam para ele.
-  const uid = useId();
-  const campoId = `${uid}-${id}`;
-  const descId = `${campoId}-desc`;
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={campoId} className={labelClass}>{label}</label>
-      <CampoComId id={campoId} descId={erro || dica ? descId : undefined} invalido={!!erro}>
-        {children}
-      </CampoComId>
-      {erro ? (
-        <p id={descId} className="text-sm font-semibold text-on-accent-soft">{erro}</p>
-      ) : (
-        dica && <p id={descId} className="text-sm text-ink-muted" aria-live="polite">{dica}</p>
-      )}
-    </div>
-  );
-}
-
-/** Injeta id, aria-describedby e aria-invalid no campo filho. */
-function CampoComId({ id, descId, invalido, children }: { id: string; descId?: string; invalido: boolean; children: ReactNode }) {
-  // cloneElement mantém a ref do register (o React Hook Form lê o valor por ela).
-  return cloneElement(children as ReactElement<Record<string, unknown>>, { id, 'aria-describedby': descId, 'aria-invalid': invalido || undefined });
 }
 
 function Concluido({ id, registro, entidade, nome }: { id: string; registro: string; entidade: string; nome: string }) {

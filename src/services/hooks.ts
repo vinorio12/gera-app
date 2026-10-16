@@ -21,6 +21,20 @@ import {
   obterResumoPublico,
   type FiltroOportunidades,
 } from './publico';
+import {
+  listarCampanhasGestao,
+  listarEventosGestao,
+  listarIngressosDoEvento,
+  listarMovimentos,
+  listarOportunidadesGestao,
+  listarPatrocinadores,
+  listarProdutosGestao,
+  obterDoacoesDaCampanha,
+  obterEventoGestao,
+  obterOportunidadeGestao,
+  obterPatrocinador,
+  obterProdutoGestao,
+} from './gestao';
 import { listarBeneficiosDoParceiro, listarResgates } from './parceiros';
 import { acompanharPedido, listarMeusIngressos, listarMinhasDoacoes } from './pedidos';
 import { listarEntidades, listarVoluntariosDaEntidade, obterMeuPainel, obterVoluntarioDaEntidade, ServiceError } from './voluntarios';
@@ -112,6 +126,32 @@ export const useMeusIngressos = (voluntarioId: string) =>
   useQuery({ queryKey: ['voluntario', voluntarioId, 'ingressos'], queryFn: () => listarMeusIngressos(voluntarioId) });
 export const useMinhasDoacoes = (voluntarioId: string) =>
   useQuery({ queryKey: ['voluntario', voluntarioId, 'doacoes'], queryFn: () => listarMinhasDoacoes(voluntarioId) });
+
+// ---------- Gestão da entidade ----------
+export const useOportunidadesGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'oportunidades-gestao'], queryFn: () => listarOportunidadesGestao(entidadeId) });
+export const useOportunidadeGestao = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'oportunidade', id], queryFn: () => obterOportunidadeGestao(id!, entidadeId), enabled: !!id });
+export const useEventosGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'eventos'], queryFn: () => listarEventosGestao(entidadeId) });
+export const useEventoGestao = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'evento', id], queryFn: () => obterEventoGestao(id!, entidadeId), enabled: !!id });
+export const useIngressosDoEvento = (eventoId: string, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'evento', eventoId, 'ingressos'], queryFn: () => listarIngressosDoEvento(eventoId, entidadeId) });
+export const useProdutosGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'produtos'], queryFn: () => listarProdutosGestao(entidadeId) });
+export const useProdutoGestao = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'produto', id], queryFn: () => obterProdutoGestao(id!, entidadeId), enabled: !!id });
+export const useMovimentosEstoque = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'movimentos'], queryFn: () => listarMovimentos(entidadeId) });
+export const useCampanhasGestao = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'campanhas'], queryFn: () => listarCampanhasGestao(entidadeId) });
+export const useDoacoesDaCampanha = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'campanha', id], queryFn: () => obterDoacoesDaCampanha(id!, entidadeId), enabled: !!id });
+export const usePatrocinadores = (entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'patrocinadores'], queryFn: () => listarPatrocinadores(entidadeId) });
+export const usePatrocinador = (id: string | undefined, entidadeId: string) =>
+  useQuery({ queryKey: ['entidade', entidadeId, 'patrocinador', id], queryFn: () => obterPatrocinador(id!, entidadeId), enabled: !!id });
 
 /**
  * Mutação que, ao dar certo, recarrega todas as consultas. No protótipo os dados são pequenos e

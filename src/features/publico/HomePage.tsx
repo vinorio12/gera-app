@@ -83,7 +83,7 @@ function Contadores() {
           <KpiCard className="min-w-0" label="Entidades" value={formatNumber(resumo.data.entidades)} source="cadastro do Comitê Social" />
           <KpiCard className="min-w-0" label="Voluntários ativos" value={formatNumber(resumo.data.voluntarios)} source="ação nos últimos 6 meses" />
           <KpiCard className="min-w-0" label="Horas doadas" value={formatHours(resumo.data.horas)} source="banco de horas das entidades" />
-          <KpiCard className="min-w-0" label="Arrecadado em 12 meses" value={formatBRL(resumo.data.arrecadado12m)} source="ingressos, loja, campanhas e doações" />
+          <KpiCard className="min-w-0" label="Arrecadado em 12 meses" value={formatBRL(resumo.data.arrecadado12m)} source="ingressos, loja, campanhas, doações e patrocínios" />
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
