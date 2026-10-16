@@ -180,7 +180,7 @@ function Formulario({ onCriado }: { onCriado: (id: string) => void }) {
   return (
     <>
       <PageHeader eyebrow={resumo.titulo} title={gratuito ? 'Confirmar' : 'Pagamento'} />
-      <form onSubmit={pagar} className="flex flex-col gap-6">
+      <form onSubmit={pagar} noValidate className="flex flex-col gap-6">
         <section aria-labelledby="resumo" className="rounded-lg border border-border bg-bg-card p-5 shadow-card">
           <h2 id="resumo" className="mb-3 text-lg font-bold text-ink">Resumo</h2>
           <ul className="flex flex-col gap-2">
