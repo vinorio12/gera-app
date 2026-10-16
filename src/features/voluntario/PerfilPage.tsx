@@ -12,8 +12,8 @@ import { cardClass } from '../../components/ui/card';
 import { Campo } from '../../components/ui/Campo';
 import { inputClass } from '../../components/ui/form';
 import { useSession } from '../../lib/auth';
-import { baixarArquivo } from '../../lib/download';
 import { formatDate, formatDateTime } from '../../lib/format';
+import { salvarArquivo } from '../../lib/salvarArquivo';
 import { mensagemDeErro, useGeraMutation, useMeuPerfil } from '../../services/hooks';
 import { exportarMeusDados, pedirExclusao, salvarMeuPerfil, salvarPreferencias, type MeuPerfil } from '../../services/perfil';
 import { AREAS, type Area, type PreferenciasNotificacao } from '../../types/domain';
@@ -188,16 +188,20 @@ function Lgpd({ perfil }: { perfil: MeuPerfil }) {
   const toast = useToast();
   const [previa, setPrevia] = useState<string | null>(null);
   const [baixando, setBaixando] = useState(false);
+  const [erroDownload, setErroDownload] = useState<string | null>(null);
   const [pedindo, setPedindo] = useState(false);
   const [motivo, setMotivo] = useState('');
   const pedir = useGeraMutation((m: string) => pedirExclusao(v.id, m));
   const baixar = async () => {
+    setErroDownload(null);
     setBaixando(true);
     try {
       const dados = await exportarMeusDados(v.id);
       const json = JSON.stringify(dados, null, 2);
-      if (!baixarArquivo(json, `meus-dados-gera-${v.registro.toLowerCase()}.json`, 'application/json')) setPrevia(json);
-      else toast.show('Seus dados foram baixados em JSON.');
+      const r = await salvarArquivo(json, `meus-dados-gera-${v.registro.toLowerCase()}.json`, 'application/json');
+      if (r.estado === 'previa') setPrevia(json);
+      else if (r.estado === 'tentar-de-novo') setErroDownload(r.mensagem);
+      else if (r.estado === 'salvo') toast.show('Seus dados foram baixados em JSON.');
     } finally {
       setBaixando(false);
     }
@@ -209,6 +213,7 @@ function Lgpd({ perfil }: { perfil: MeuPerfil }) {
       <Button variant="secondary" onClick={baixar} disabled={baixando} className="justify-center">
         <Download size={18} aria-hidden /> {baixando ? 'Preparando…' : 'Baixar meus dados'}
       </Button>
+      <InlineError>{erroDownload}</InlineError>
       {perfil.pedidoExclusao ? (
         <p role="status" className="rounded-md bg-info-soft px-3 py-2 text-sm text-on-info-soft">
           Pedido de exclusão registrado em {formatDateTime(perfil.pedidoExclusao.pedidoEm)}. O comitê responde em até 15 dias, pelo seu e-mail.
@@ -243,7 +248,7 @@ function Lgpd({ perfil }: { perfil: MeuPerfil }) {
         </Campo>
       </ConfirmDialog>
       {previa && (
-        <PreviaImpressao titulo="Meus dados (JSON)" texto={previa} onClose={() => setPrevia(null)}>
+        <PreviaImpressao titulo="Meus dados (JSON)" onClose={() => setPrevia(null)}>
           <pre className="whitespace-pre-wrap break-all font-mono text-xs text-ink">{previa}</pre>
         </PreviaImpressao>
       )}

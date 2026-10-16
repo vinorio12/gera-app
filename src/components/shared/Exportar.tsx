@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Eye, FileDown, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@gera/design-system';
-import { documentoParaCsv, documentoParaTexto, type Documento } from '../../lib/documento';
-import { baixarArquivo, nomeDeArquivo } from '../../lib/download';
+import { documentoParaCsv, type Documento } from '../../lib/documento';
+import { dentroDeQuadro, nomeDeArquivo } from '../../lib/download';
+import { salvarArquivo, type ResultadoSalvar } from '../../lib/salvarArquivo';
 import { DocumentoView } from './DocumentoView';
 import { InlineError } from './States';
 import { PreviaImpressao } from './PreviaImpressao';
@@ -14,13 +15,17 @@ export function Exportar({ doc, csv = true }: { doc: Documento; csv?: boolean })
   const [erro, setErro] = useState<string | null>(null);
   const nome = nomeDeArquivo(`${doc.titulo} ${doc.subtitulo}`);
 
+  const tratar = (r: ResultadoSalvar) => {
+    if (r.estado === 'previa') setPrevia(true);
+    else if (r.estado === 'tentar-de-novo') setErro(r.mensagem);
+  };
   const pdf = async () => {
     setErro(null);
     setGerando(true);
     try {
       const { documentoPdf } = await import('../../lib/pdf');
       const blob = await documentoPdf(doc);
-      if (!baixarArquivo(blob, `${nome}.pdf`)) setPrevia(true);
+      tratar(await salvarArquivo(blob, `${nome}.pdf`, 'application/pdf'));
     } catch {
       setErro('Não deu para gerar o PDF aqui. Abrimos a versão para imprimir.');
       setPrevia(true);
@@ -28,8 +33,9 @@ export function Exportar({ doc, csv = true }: { doc: Documento; csv?: boolean })
       setGerando(false);
     }
   };
-  const planilha = () => {
-    if (!baixarArquivo(documentoParaCsv(doc), `${nome}.csv`, 'text/csv;charset=utf-8')) setPrevia(true);
+  const planilha = async () => {
+    setErro(null);
+    tratar(await salvarArquivo(documentoParaCsv(doc), `${nome}.csv`, 'text/csv;charset=utf-8'));
   };
 
   return (
@@ -43,13 +49,15 @@ export function Exportar({ doc, csv = true }: { doc: Documento; csv?: boolean })
             <FileSpreadsheet size={18} aria-hidden /> Baixar planilha (CSV)
           </Button>
         )}
-        <Button variant="ghost" onClick={() => setPrevia(true)}>
-          <Eye size={18} aria-hidden /> Ver para imprimir
-        </Button>
+        {!dentroDeQuadro() && (
+          <Button variant="ghost" onClick={() => setPrevia(true)}>
+            <Eye size={18} aria-hidden /> Ver para imprimir
+          </Button>
+        )}
       </div>
       <InlineError>{erro}</InlineError>
       {previa && (
-        <PreviaImpressao titulo={doc.titulo} texto={documentoParaTexto(doc)} onClose={() => setPrevia(false)}>
+        <PreviaImpressao titulo={doc.titulo} onClose={() => setPrevia(false)}>
           <DocumentoView doc={doc} />
         </PreviaImpressao>
       )}

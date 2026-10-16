@@ -2,34 +2,30 @@ import { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { FileDown } from 'lucide-react';
 import { Button, Rack, type ButtonVariant } from '@gera/design-system';
-import { baixarArquivo } from '../../lib/download';
 import { formatDate } from '../../lib/format';
+import { salvarArquivo } from '../../lib/salvarArquivo';
 import type { CertificadoDetalhado } from '../../services/certificados';
 import { BrandLogo } from './BrandLogo';
 import { PreviaImpressao } from './PreviaImpressao';
+import { InlineError } from './States';
 
 /** Endereço público de validação, que vai no QR do certificado. */
 export const urlValidacaoCertificado = (codigo: string) => `${window.location.origin}/validar/certificado/${codigo}`;
-
-const textoDoCertificado = (c: CertificadoDetalhado) =>
-  [
-    'CERTIFICADO DE VOLUNTARIADO',
-    `Certificamos que ${c.nome} atuou como voluntário(a) na ${c.entidadeNome}, somando ${c.horas} horas de trabalho voluntário entre ${formatDate(c.inicio)} e ${formatDate(c.fim)}.`,
-    `Emitido em ${formatDate(c.emitidoEm)} por ${c.emitidoPor}. Comitê Social ACIJS · Plataforma GERA.`,
-    `Código de verificação: ${c.codigo}`,
-    `Confira em ${urlValidacaoCertificado(c.codigo)}`,
-  ].join('\n\n');
 
 /** Baixa o PDF do certificado; se o download for bloqueado, abre a versão para imprimir. */
 export function CertificadoDownload({ certificado: c, variant = 'secondary', label = 'Baixar PDF' }: { certificado: CertificadoDetalhado; variant?: ButtonVariant; label?: string }) {
   const [gerando, setGerando] = useState(false);
   const [previa, setPrevia] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const baixar = async () => {
+    setErro(null);
     setGerando(true);
     try {
       const { certificadoPdf } = await import('../../lib/pdf');
       const blob = await certificadoPdf({ ...c, urlValidacao: urlValidacaoCertificado(c.codigo) });
-      if (!baixarArquivo(blob, `certificado-${c.codigo.toLowerCase()}.pdf`)) setPrevia(true);
+      const r = await salvarArquivo(blob, `certificado-${c.codigo.toLowerCase()}.pdf`, 'application/pdf');
+      if (r.estado === 'previa') setPrevia(true);
+      else if (r.estado === 'tentar-de-novo') setErro(r.mensagem);
     } catch {
       setPrevia(true);
     } finally {
@@ -41,8 +37,9 @@ export function CertificadoDownload({ certificado: c, variant = 'secondary', lab
       <Button variant={variant} onClick={baixar} disabled={gerando} aria-label={`${label}: certificado de ${c.nome}, ${formatDate(c.inicio)} a ${formatDate(c.fim)}`}>
         <FileDown size={16} aria-hidden /> {gerando ? 'Gerando…' : label}
       </Button>
+      <InlineError>{erro}</InlineError>
       {previa && (
-        <PreviaImpressao titulo={`Certificado · ${c.nome}`} texto={textoDoCertificado(c)} onClose={() => setPrevia(false)}>
+        <PreviaImpressao titulo={`Certificado · ${c.nome}`} onClose={() => setPrevia(false)}>
           <CertificadoView certificado={c} />
         </PreviaImpressao>
       )}

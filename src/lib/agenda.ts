@@ -93,6 +93,23 @@ export function gerarIcs(e: EventoAgenda, agora = new Date()): string {
   return `${linhas.join('\r\n')}\r\n`;
 }
 
+/**
+ * Link "Adicionar ao Google Agenda". Serve onde o .ics não pode ser baixado (página publicada num quadro).
+ * Horário em UTC (AAAAMMDDTHHMMSSZ); no dia inteiro, só as datas.
+ */
+export function linkGoogleAgenda(e: EventoAgenda): string {
+  const datas = e.diaInteiro ? `${dia(e.inicio)}/${dia(e.fim)}` : `${utc(e.inicio)}/${utc(e.fim)}`;
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: e.titulo,
+    dates: datas,
+    details: e.descricao + (e.url ? ` ${e.url}` : ''),
+    location: e.local,
+  });
+  // "/" nas datas fica sem escape, como o Google escreve.
+  return `https://calendar.google.com/calendar/render?${params.toString().replace('%2F', '/')}`;
+}
+
 /** Link do WhatsApp com o texto pronto (a pessoa escolhe para quem mandar). */
 export const linkWhatsApp = (texto: string, telefone?: string) =>
   `https://wa.me/${telefone ? `55${telefone.replace(/\D/g, '')}` : ''}?text=${encodeURIComponent(texto)}`;
